@@ -230,38 +230,52 @@ export default function HomePage() {
 
         {/* Sidebar: Inline Configuration Form & Checkout */}
         <div className="space-y-6">
-          <div className="bg-white border border-zinc-200 rounded-3xl p-6 shadow-xs">
-            <div className="flex items-center justify-between border-b border-zinc-100 pb-3 mb-4">
+          <div className="bg-white border border-zinc-200/80 rounded-3xl p-6 sm:p-7 shadow-xs">
+            {/* Header */}
+            <div className="flex items-start justify-between border-b border-zinc-100 pb-4 mb-5">
               <div>
-                <h3 className="font-black text-lg text-zinc-900">
-                  Setup Your Pixel Square
-                </h3>
-                <p className="text-xs text-zinc-500 mt-0.5">
-                  Live preview updates right on the canvas
+                <div className="flex items-center gap-2">
+                  <h3 className="font-black text-lg text-zinc-950 tracking-tight">
+                    Setup Your Pixel Square
+                  </h3>
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/60 px-2 py-0.5 rounded-full">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    Live Sync
+                  </span>
+                </div>
+                <p className="text-xs text-zinc-500 mt-1 leading-relaxed">
+                  Your logo and project name render live on the grid
                 </p>
               </div>
-              <span className="text-xs bg-zinc-900 text-white font-mono font-bold px-2.5 py-1 rounded-full">
-                {selection ? `${selection.size}×${selection.size}` : "Pick Square"}
-              </span>
+              <div className="text-right shrink-0">
+                <span className="text-xs bg-zinc-950 text-white font-mono font-black px-3 py-1 rounded-full shadow-2xs">
+                  {selection ? `${selection.size}×${selection.size}` : "10×10"}
+                </span>
+                <div className="text-[11px] font-mono font-bold text-zinc-500 mt-1">
+                  {selection ? formatCents(selection.priceCents) : "$1.00"}
+                </div>
+              </div>
             </div>
 
             <div className="space-y-4">
+              {/* Project Name */}
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700">
-                  Project or Brand Name
+                <label className="block text-xs font-bold text-zinc-800 mb-1.5">
+                  Project or Brand Name <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={form.title}
                   onChange={(e) => setForm({ ...form, title: e.target.value })}
                   placeholder="e.g. Acme Studio / My SaaS"
-                  className="mt-1 w-full border border-zinc-200 rounded-xl px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-zinc-900 focus:outline-none bg-zinc-50 focus:bg-white transition"
+                  className="w-full border border-zinc-200 rounded-xl px-3.5 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 bg-zinc-50/50 hover:bg-zinc-50 focus:bg-white focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900 focus:outline-none transition"
                 />
               </div>
 
+              {/* Destination URL */}
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700">
-                  Destination URL (Click Target)
+                <label className="block text-xs font-bold text-zinc-800 mb-1.5">
+                  Destination Link <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="url"
@@ -270,59 +284,105 @@ export default function HomePage() {
                     setForm({ ...form, targetUrl: e.target.value })
                   }
                   placeholder="https://yourwebsite.com"
-                  className="mt-1 w-full border border-zinc-200 rounded-xl px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-zinc-900 focus:outline-none bg-zinc-50 focus:bg-white transition"
+                  className="w-full border border-zinc-200 rounded-xl px-3.5 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 bg-zinc-50/50 hover:bg-zinc-50 focus:bg-white focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900 focus:outline-none transition"
                 />
               </div>
 
+              {/* Logo / Brand Asset Upload */}
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700">
-                  Logo / Brand Asset
-                </label>
-                <div className="mt-1 flex items-center gap-2">
-                  <input
-                    type="url"
-                    value={form.imageUrl}
-                    onChange={(e) =>
-                      setForm({ ...form, imageUrl: e.target.value })
-                    }
-                    placeholder="https://.../logo.png"
-                    className="flex-1 border border-zinc-200 rounded-xl px-3.5 py-2.5 text-xs focus:ring-2 focus:ring-zinc-900 focus:outline-none bg-zinc-50 focus:bg-white transition"
-                  />
-                  <label className="cursor-pointer border border-zinc-200 bg-zinc-100 hover:bg-zinc-200 px-3 py-2.5 rounded-xl text-xs font-bold text-zinc-700 shrink-0">
-                    Upload
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleFileUpload}
-                      className="hidden"
-                    />
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-bold text-zinc-800">
+                    Logo / Brand Asset
                   </label>
+                  <span className="text-[11px] text-zinc-400">PNG, JPG, SVG (&lt;2MB)</span>
                 </div>
-                {form.imageUrl && (
-                  <div className="mt-2 flex items-center gap-2 bg-zinc-50 border border-zinc-200 rounded-xl p-2">
-                    <img
-                      src={form.imageUrl}
-                      alt="Logo preview"
-                      className="w-8 h-8 rounded-lg object-contain bg-white border border-zinc-100"
-                    />
-                    <span className="text-xs text-zinc-600 truncate flex-1">
-                      Logo connected & rendering on grid
-                    </span>
-                    <button
-                      onClick={() => setForm({ ...form, imageUrl: "" })}
-                      className="text-xs text-red-500 font-bold hover:underline"
-                    >
-                      Clear
-                    </button>
+
+                {form.imageUrl ? (
+                  /* Connected Logo Preview Card */
+                  <div className="bg-zinc-50 border border-zinc-200 rounded-2xl p-3 flex items-center gap-3 shadow-2xs">
+                    <div className="w-12 h-12 rounded-xl bg-white border border-zinc-200 p-1 flex items-center justify-center shrink-0 shadow-xs overflow-hidden">
+                      <img
+                        src={form.imageUrl}
+                        alt="Logo preview"
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                        <span className="text-xs font-bold text-zinc-900 truncate">
+                          Logo active on grid
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-zinc-500 mt-0.5 truncate">
+                        Rendering inside {selection?.size || 20}×{selection?.size || 20} box
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <label className="cursor-pointer text-xs font-bold text-zinc-700 hover:text-zinc-900 bg-white border border-zinc-200 hover:bg-zinc-50 px-2.5 py-1.5 rounded-lg transition shadow-2xs">
+                        Change
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleFileUpload}
+                          className="hidden"
+                        />
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setForm({ ...form, imageUrl: "" })}
+                        className="text-xs font-bold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 px-2.5 py-1.5 rounded-lg transition"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  /* Clean Dropzone Upload Area */
+                  <div className="space-y-2">
+                    <label className="group flex flex-col items-center justify-center border-2 border-dashed border-zinc-200 hover:border-zinc-400 bg-zinc-50/50 hover:bg-zinc-50 rounded-2xl p-4 cursor-pointer transition text-center">
+                      <div className="w-8 h-8 rounded-full bg-white border border-zinc-200 grid place-items-center text-zinc-600 text-sm shadow-2xs group-hover:scale-105 transition">
+                        ↑
+                      </div>
+                      <div className="text-xs font-bold text-zinc-800 mt-2">
+                        Click to upload logo image
+                      </div>
+                      <div className="text-[11px] text-zinc-400 mt-0.5">
+                        Renders directly inside your square on the canvas
+                      </div>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileUpload}
+                        className="hidden"
+                      />
+                    </label>
+
+                    {/* Or URL input fallback */}
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider">or URL:</span>
+                      <input
+                        type="url"
+                        value={form.imageUrl}
+                        onChange={(e) =>
+                          setForm({ ...form, imageUrl: e.target.value })
+                        }
+                        placeholder="https://.../logo.png"
+                        className="flex-1 border border-zinc-200 rounded-lg px-2.5 py-1.5 text-xs text-zinc-800 placeholder:text-zinc-400 bg-zinc-50 focus:bg-white focus:outline-none"
+                      />
+                    </div>
                   </div>
                 )}
               </div>
 
+              {/* Category Pills */}
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700">
-                  Category Tag
+                <label className="block text-xs font-bold text-zinc-800 mb-1.5">
+                  Category
                 </label>
-                <div className="mt-1.5 flex flex-wrap gap-1.5">
+                <div className="flex flex-wrap gap-1.5">
                   {["AI", "SaaS", "DevTools", "Fintech", "Crypto", "Design", "Other"].map(
                     (cat) => (
                       <button
@@ -331,8 +391,8 @@ export default function HomePage() {
                         onClick={() => setForm({ ...form, category: cat })}
                         className={`px-3 py-1 rounded-full text-xs font-bold border transition ${
                           form.category === cat
-                            ? "bg-zinc-900 text-white border-zinc-900 shadow-xs"
-                            : "bg-zinc-50 border-zinc-200 text-zinc-700 hover:bg-zinc-100"
+                            ? "bg-zinc-950 text-white border-zinc-950 shadow-xs"
+                            : "bg-zinc-50/80 border-zinc-200 text-zinc-700 hover:bg-zinc-100"
                         }`}
                       >
                         {cat}
@@ -342,22 +402,28 @@ export default function HomePage() {
                 </div>
               </div>
 
-              <div className="pt-2">
+              {/* Checkout Action */}
+              <div className="pt-3">
                 <button
                   onClick={confirmReserve}
                   disabled={reserving || !selection}
-                  className="w-full bg-[#ff3b30] text-white rounded-2xl py-3.5 font-black text-base hover:bg-[#e5352c] transition shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-[#ff3b30] hover:bg-[#e5352c] text-white rounded-2xl py-3.5 font-black text-base transition shadow-md hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  {reserving
-                    ? "Locking Spot…"
-                    : `Lock & Checkout (${
-                        selection
-                          ? formatCents(selection.priceCents)
-                          : "$1.00"
-                      }) →`}
+                  {reserving ? (
+                    "Locking Spot on Canvas…"
+                  ) : (
+                    <>
+                      <span>Lock & Checkout</span>
+                      <span className="bg-white/20 px-2.5 py-0.5 rounded-full text-sm font-mono">
+                        {selection ? formatCents(selection.priceCents) : "$1.00"}
+                      </span>
+                      <span>→</span>
+                    </>
+                  )}
                 </button>
-                <div className="text-[11px] text-center text-zinc-500 mt-2">
-                  Instant live placement upon checkout. 30-day lease with click tracking.
+                <div className="text-[11px] text-center text-zinc-500 mt-2.5 flex items-center justify-center gap-1.5">
+                  <span>⚡</span>
+                  <span>10-minute hold · Instant 30-day placement on payment</span>
                 </div>
               </div>
             </div>

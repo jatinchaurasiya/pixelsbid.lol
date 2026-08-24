@@ -190,25 +190,82 @@ export default function RentPage() {
               />
             </div>
 
+            {/* Logo / Brand Asset */}
             <div>
-              <label className="text-xs font-bold uppercase tracking-wider text-zinc-600">Square Logo / Image URL</label>
-              <input
-                value={form.imageUrl}
-                onChange={e => setForm({ ...form, imageUrl: e.target.value })}
-                placeholder="https://yourdomain.com/logo.png"
-                className="mt-1 w-full border border-zinc-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-zinc-900 focus:outline-none bg-white"
-              />
-              {form.imageUrl && (
-                <div className="mt-2 flex items-center gap-3 p-2 bg-zinc-50 border border-zinc-200 rounded-xl">
-                  <img
-                    src={form.imageUrl}
-                    alt="preview"
-                    className="w-16 h-16 object-cover rounded-lg border border-zinc-200 bg-white"
-                    onError={(e) => {
-                      (e.target as HTMLElement).style.display = "none";
-                    }}
-                  />
-                  <div className="text-xs text-zinc-500">Live preview of your square image on the canvas.</div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-xs font-bold text-zinc-800">Logo / Brand Asset</label>
+                <span className="text-[11px] text-zinc-400">PNG, JPG, SVG (&lt;2MB)</span>
+              </div>
+
+              {form.imageUrl ? (
+                <div className="bg-zinc-50 border border-zinc-200 rounded-2xl p-3 flex items-center gap-3 shadow-2xs">
+                  <div className="w-12 h-12 rounded-xl bg-white border border-zinc-200 p-1 flex items-center justify-center shrink-0 shadow-xs overflow-hidden">
+                    <img
+                      src={form.imageUrl}
+                      alt="Logo preview"
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                      <span className="text-xs font-bold text-zinc-900 truncate">
+                        Logo attached
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-zinc-500 mt-0.5 truncate">
+                      Will render inside your active spot on canvas
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setForm({ ...form, imageUrl: "" })}
+                    className="text-xs font-bold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 px-2.5 py-1.5 rounded-lg transition"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <label className="group flex flex-col items-center justify-center border-2 border-dashed border-zinc-200 hover:border-zinc-400 bg-zinc-50/50 hover:bg-zinc-50 rounded-2xl p-4 cursor-pointer transition text-center">
+                    <div className="w-8 h-8 rounded-full bg-white border border-zinc-200 grid place-items-center text-zinc-600 text-sm shadow-2xs group-hover:scale-105 transition">
+                      ↑
+                    </div>
+                    <div className="text-xs font-bold text-zinc-800 mt-2">
+                      Click to upload logo image
+                    </div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        if (file.size > 2 * 1024 * 1024) {
+                          alert("Please upload an image smaller than 2MB.");
+                          return;
+                        }
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                          if (typeof reader.result === "string") {
+                            setForm((f) => ({ ...f, imageUrl: reader.result as string }));
+                          }
+                        };
+                        reader.readAsDataURL(file);
+                      }}
+                      className="hidden"
+                    />
+                  </label>
+
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider">or URL:</span>
+                    <input
+                      type="url"
+                      value={form.imageUrl}
+                      onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
+                      placeholder="https://.../logo.png"
+                      className="flex-1 border border-zinc-200 rounded-lg px-2.5 py-1.5 text-xs text-zinc-800 placeholder:text-zinc-400 bg-zinc-50 focus:bg-white focus:outline-none"
+                    />
+                  </div>
                 </div>
               )}
             </div>

@@ -498,23 +498,85 @@ export default function TodayPage() {
                 />
               </div>
 
+              {/* Logo Asset Upload */}
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700">
-                  Logo Image URL
-                </label>
-                <input
-                  type="url"
-                  value={outbidForm.imageUrl}
-                  onChange={(e) =>
-                    setOutbidForm({ ...outbidForm, imageUrl: e.target.value })
-                  }
-                  placeholder="https://.../logo.png (optional)"
-                  className="mt-1 w-full border border-zinc-200 rounded-xl px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-zinc-900 focus:outline-none bg-zinc-50"
-                />
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-bold text-zinc-800">
+                    Logo / Brand Asset
+                  </label>
+                  <span className="text-[11px] text-zinc-400">PNG, JPG, SVG (&lt;2MB)</span>
+                </div>
+
+                {outbidForm.imageUrl ? (
+                  <div className="bg-zinc-50 border border-zinc-200 rounded-2xl p-2.5 flex items-center gap-2.5">
+                    <div className="w-10 h-10 rounded-xl bg-white border border-zinc-200 p-1 flex items-center justify-center shrink-0 overflow-hidden">
+                      <img
+                        src={outbidForm.imageUrl}
+                        alt="Logo preview"
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-xs font-bold text-zinc-900 truncate">
+                        Logo ready
+                      </div>
+                      <div className="text-[10px] text-zinc-500 truncate">
+                        Attached for live grid render
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setOutbidForm({ ...outbidForm, imageUrl: "" })}
+                      className="text-xs font-bold text-red-600 hover:text-red-700 bg-red-50 px-2.5 py-1 rounded-lg transition"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <label className="flex items-center justify-center gap-2 border-2 border-dashed border-zinc-200 hover:border-zinc-400 bg-zinc-50/50 hover:bg-zinc-50 rounded-xl p-3 cursor-pointer transition text-center">
+                      <span className="text-xs font-bold text-zinc-700">
+                        📁 Click to upload logo
+                      </span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          if (file.size > 2 * 1024 * 1024) {
+                            alert("Please upload an image smaller than 2MB.");
+                            return;
+                          }
+                          const reader = new FileReader();
+                          reader.onload = () => {
+                            if (typeof reader.result === "string") {
+                              setOutbidForm((f) => ({
+                                ...f,
+                                imageUrl: reader.result as string,
+                              }));
+                            }
+                          };
+                          reader.readAsDataURL(file);
+                        }}
+                        className="hidden"
+                      />
+                    </label>
+                    <input
+                      type="url"
+                      value={outbidForm.imageUrl}
+                      onChange={(e) =>
+                        setOutbidForm({ ...outbidForm, imageUrl: e.target.value })
+                      }
+                      placeholder="or paste logo URL (https://...)"
+                      className="w-full border border-zinc-200 rounded-lg px-2.5 py-1.5 text-xs text-zinc-800 placeholder:text-zinc-400 bg-zinc-50 focus:bg-white focus:outline-none"
+                    />
+                  </div>
+                )}
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700">
+                <label className="block text-xs font-bold text-zinc-800 mb-1.5">
                   Category
                 </label>
                 <select
