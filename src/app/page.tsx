@@ -136,12 +136,71 @@ export default function HomePage() {
     ? Math.max(1, Math.round((selection.size / 10) * (selection.size / 10)))
     : 1;
 
+  const [heroUrl, setHeroUrl] = useState("");
+  const [heroCategory, setHeroCategory] = useState("AI");
+  const [showAdvanced, setShowAdvanced] = useState(false);
+
+  const handleHeroOutbid = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!heroUrl.trim()) return;
+
+    let target = heroUrl.trim();
+    let title = target;
+
+    if (target.startsWith("@")) {
+      const handle = target.replace(/^@/, "");
+      target = `https://x.com/${handle}`;
+      title = `@${handle}`;
+    } else if (!target.startsWith("http://") && !target.startsWith("https://")) {
+      target = `https://${target}`;
+      try {
+        title = new URL(target).hostname.replace(/^www\./, "");
+      } catch {
+        title = target;
+      }
+    } else {
+      try {
+        title = new URL(target).hostname.replace(/^www\./, "");
+      } catch {
+        title = target;
+      }
+    }
+
+    setReserving(true);
+    try {
+      const size = selection?.size || 20;
+      const x = selection?.x ?? Math.floor(Math.random() * (100 - size / 10)) * 10;
+      const y = selection?.y ?? Math.floor(Math.random() * (100 - size / 10)) * 10;
+
+      const r = await fetch("/api/reservations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          x,
+          y,
+          size,
+          userId: "anon",
+          title: form.title.trim() || title,
+          targetUrl: target,
+          imageUrl: form.imageUrl.trim() || undefined,
+          category: heroCategory,
+        }),
+      });
+      const j = await r.json();
+      if (!r.ok) throw new Error(j.error || "Reservation failed");
+      window.location.href = `/rent/${encodeURIComponent(j.id)}`;
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : "Failed to claim square");
+      setReserving(false);
+    }
+  };
+
   return (
     <div className="pb-28">
       <StatsBar />
 
-      {/* Hero Section — Hallmark Modern Minimal / High Contrast */}
-      <section className="mx-auto max-w-[1300px] px-4 pt-8 pb-6 text-center sm:pt-12 sm:pb-10">
+      {/* Hero Section — Minimalist Outbid Style */}
+      <section className="mx-auto max-w-[1200px] px-4 pt-12 pb-10 text-center sm:pt-16 sm:pb-14">
         <div className="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-4 py-1.5 text-xs font-bold text-zinc-700 shadow-2xs mb-5">
           <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
           <span>1000×1000 Live Billboard</span>
@@ -154,34 +213,69 @@ export default function HomePage() {
           <span className="text-[#ff3b30]">Outbid the rest.</span>
         </h1>
 
-        <p className="mx-auto mt-4 max-w-2xl text-base sm:text-lg text-zinc-600 font-medium leading-relaxed">
-          The internet&apos;s most viral billboard. Click any 10×10 block, upload your logo, and claim your permanent 30-day spotlight on{" "}
-          <span className="text-zinc-900 font-bold underline decoration-red-500 decoration-2 underline-offset-2">
-            pixelsbid.lol
-          </span>
-          .
+        <p className="mx-auto mt-4 max-w-2xl text-sm sm:text-base text-zinc-600 font-medium leading-relaxed">
+          The internet&apos;s real-time pay-to-rank billboard. Your position and size on the board reflect your bid.
         </p>
 
-        <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
-          <a
-            href="#canvas-section"
-            className="rounded-full bg-[#ff3b30] px-8 py-3.5 text-base font-black text-white hover:bg-[#e5352c] transition shadow-md hover:scale-[1.01] active:scale-[0.99]"
-          >
-            🎯 Configure & Claim Square →
-          </a>
-          <Link
-            href="/leaderboard"
-            className="rounded-full border border-zinc-200 bg-white px-7 py-3.5 text-base font-bold text-zinc-900 hover:bg-zinc-50 transition shadow-2xs"
-          >
-            ★ View Leaderboard
-          </Link>
-        </div>
+        {/* Viral Hero Input Bar (outbid.lol format) */}
+        <form onSubmit={handleHeroOutbid} className="mt-8 mx-auto max-w-2xl">
+          <div className="flex flex-col sm:flex-row items-center gap-2 p-1.5 bg-white border border-zinc-200 rounded-2xl sm:rounded-full shadow-xs hover:border-zinc-300 focus-within:border-zinc-400 focus-within:ring-4 focus-within:ring-zinc-900/5 transition">
+            {/* Input */}
+            <div className="flex items-center gap-2.5 px-4 py-2.5 sm:py-2 flex-1 w-full">
+              <span className="text-zinc-400 text-sm">🌐</span>
+              <input
+                type="text"
+                required
+                value={heroUrl}
+                onChange={(e) => {
+                  setHeroUrl(e.target.value);
+                  setForm((f) => ({ ...f, targetUrl: e.target.value }));
+                }}
+                placeholder="Your product URL or @handle"
+                className="w-full bg-transparent text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none"
+              />
+            </div>
+
+            {/* Category Dropdown */}
+            <div className="w-full sm:w-auto px-2 sm:px-0">
+              <select
+                value={heroCategory}
+                onChange={(e) => {
+                  setHeroCategory(e.target.value);
+                  setForm((f) => ({ ...f, category: e.target.value }));
+                }}
+                className="w-full sm:w-auto border sm:border-0 border-zinc-200 bg-zinc-50 sm:bg-transparent rounded-full px-3.5 py-2 text-xs font-bold text-zinc-700 focus:outline-none cursor-pointer"
+              >
+                <option value="AI">AI & ML</option>
+                <option value="SaaS">SaaS & Apps</option>
+                <option value="DevTools">Developer Tools</option>
+                <option value="Marketing">Marketing & SEO</option>
+                <option value="Fintech">Fintech & Web3</option>
+                <option value="Design">Design & Creative</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            {/* Outbid Button */}
+            <button
+              type="submit"
+              disabled={reserving}
+              className="w-full sm:w-auto rounded-full bg-[#f87171] hover:bg-[#ef4444] text-white px-7 py-2.5 font-bold text-sm transition shadow-2xs hover:scale-[1.02] active:scale-[0.98] shrink-0 disabled:opacity-50"
+            >
+              {reserving ? "Reserving…" : "Outbid"}
+            </button>
+          </div>
+
+          <p className="mt-3 text-xs text-zinc-500 font-medium">
+            Already on the list? Enter the same URL or @handle and up your bid.
+          </p>
+        </form>
       </section>
 
-      {/* Main Canvas & Interactive Setup Panel */}
+      {/* Main Canvas & Interactive Grid Section */}
       <section
         id="canvas-section"
-        className="mx-auto max-w-[1400px] px-4 grid lg:grid-cols-[1fr_400px] gap-8"
+        className="mx-auto max-w-[1400px] px-4 grid lg:grid-cols-[1fr_380px] gap-8"
       >
         <div className="min-w-0">
           {/* Canvas Component with 10x10 Snapping and Live In-Canvas Logo Preview */}
@@ -195,12 +289,12 @@ export default function HomePage() {
               config={data.config}
               selection={selection}
               onSelect={handleSelect}
-              previewTitle={form.title}
+              previewTitle={form.title || heroUrl}
               previewImageUrl={form.imageUrl}
             />
           )}
 
-          {/* Quick Selection Summary Footer */}
+          {/* Selection Status Summary */}
           {selection && (
             <div className="mt-4 bg-zinc-900 text-white rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3 shadow-md border border-zinc-800">
               <div className="flex items-center gap-3">
@@ -209,11 +303,10 @@ export default function HomePage() {
                 </div>
                 <div>
                   <div className="text-xs text-zinc-400 font-medium">
-                    Grid Position: ({selection.x}, {selection.y}) · {selection.size}×{selection.size} px
+                    Grid Location: ({selection.x}, {selection.y}) · {selection.size}×{selection.size} px
                   </div>
                   <div className="text-sm font-black text-white">
-                    {selectedUnits} block{selectedUnits > 1 ? "s" : ""} (
-                    {selection.size * selection.size} pixels) ={" "}
+                    {selectedUnits} block{selectedUnits > 1 ? "s" : ""} ={" "}
                     <span className="text-amber-400 font-mono">
                       {formatCents(selection.priceCents)}
                     </span>
@@ -221,220 +314,128 @@ export default function HomePage() {
                 </div>
               </div>
 
-              <div className="text-xs text-zinc-400">
-                ⚡ 30-Day Lease · 10-Min Checkout Hold
+              <div className="text-xs text-zinc-400 font-medium">
+                ⚡ 30-Day Lease · 10-Minute Lock Hold
               </div>
             </div>
           )}
         </div>
 
-        {/* Sidebar: Inline Configuration Form & Checkout */}
+        {/* Sidebar: Quick Action & Leaderboard */}
         <div className="space-y-6">
-          <div className="bg-white border border-zinc-200/80 rounded-3xl p-6 sm:p-7 shadow-xs">
-            {/* Header */}
-            <div className="flex items-start justify-between border-b border-zinc-100 pb-4 mb-5">
+          {/* Quick Claim Card */}
+          <div className="bg-white border border-zinc-200/90 rounded-3xl p-6 shadow-xs">
+            <div className="flex items-center justify-between border-b border-zinc-100 pb-3 mb-4">
               <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="font-black text-lg text-zinc-950 tracking-tight">
-                    Setup Your Pixel Square
-                  </h3>
-                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/60 px-2 py-0.5 rounded-full">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    Live Sync
-                  </span>
-                </div>
-                <p className="text-xs text-zinc-500 mt-1 leading-relaxed">
-                  Your logo and project name render live on the grid
+                <h3 className="font-black text-base text-zinc-950">
+                  Selected Square
+                </h3>
+                <p className="text-xs text-zinc-500">
+                  Click any cell on the grid to reposition
                 </p>
               </div>
-              <div className="text-right shrink-0">
-                <span className="text-xs bg-zinc-950 text-white font-mono font-black px-3 py-1 rounded-full shadow-2xs">
-                  {selection ? `${selection.size}×${selection.size}` : "10×10"}
-                </span>
-                <div className="text-[11px] font-mono font-bold text-zinc-500 mt-1">
-                  {selection ? formatCents(selection.priceCents) : "$1.00"}
-                </div>
-              </div>
+              <span className="text-xs bg-zinc-950 text-white font-mono font-black px-3 py-1 rounded-full">
+                {selection ? `${selection.size}×${selection.size}` : "10×10"}
+              </span>
             </div>
 
-            <div className="space-y-4">
-              {/* Project Name */}
+            <div className="space-y-3">
+              {/* Optional Custom Logo Upload */}
               <div>
-                <label className="block text-xs font-bold text-zinc-800 mb-1.5">
-                  Project or Brand Name <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={form.title}
-                  onChange={(e) => setForm({ ...form, title: e.target.value })}
-                  placeholder="e.g. Acme Studio / My SaaS"
-                  className="w-full border border-zinc-200 rounded-xl px-3.5 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 bg-zinc-50/50 hover:bg-zinc-50 focus:bg-white focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900 focus:outline-none transition"
-                />
-              </div>
+                <button
+                  type="button"
+                  onClick={() => setShowAdvanced(!showAdvanced)}
+                  className="text-xs font-bold text-zinc-600 hover:text-zinc-900 flex items-center justify-between w-full py-1"
+                >
+                  <span>{showAdvanced ? "▼ Logo & Details" : "▶ + Add Logo / Brand Name (Optional)"}</span>
+                  {form.imageUrl && (
+                    <span className="text-[10px] bg-emerald-50 text-emerald-700 font-bold px-2 py-0.5 rounded-full">
+                      ✓ Logo Active
+                    </span>
+                  )}
+                </button>
 
-              {/* Destination URL */}
-              <div>
-                <label className="block text-xs font-bold text-zinc-800 mb-1.5">
-                  Destination Link <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="url"
-                  value={form.targetUrl}
-                  onChange={(e) =>
-                    setForm({ ...form, targetUrl: e.target.value })
-                  }
-                  placeholder="https://yourwebsite.com"
-                  className="w-full border border-zinc-200 rounded-xl px-3.5 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 bg-zinc-50/50 hover:bg-zinc-50 focus:bg-white focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900 focus:outline-none transition"
-                />
-              </div>
-
-              {/* Logo / Brand Asset Upload */}
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-bold text-zinc-800">
-                    Logo / Brand Asset
-                  </label>
-                  <span className="text-[11px] text-zinc-400">PNG, JPG, SVG (&lt;2MB)</span>
-                </div>
-
-                {form.imageUrl ? (
-                  /* Connected Logo Preview Card */
-                  <div className="bg-zinc-50 border border-zinc-200 rounded-2xl p-3 flex items-center gap-3 shadow-2xs">
-                    <div className="w-12 h-12 rounded-xl bg-white border border-zinc-200 p-1 flex items-center justify-center shrink-0 shadow-xs overflow-hidden">
-                      <img
-                        src={form.imageUrl}
-                        alt="Logo preview"
-                        className="w-full h-full object-contain"
-                      />
-                    </div>
-
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                        <span className="text-xs font-bold text-zinc-900 truncate">
-                          Logo active on grid
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-zinc-500 mt-0.5 truncate">
-                        Rendering inside {selection?.size || 20}×{selection?.size || 20} box
-                      </p>
-                    </div>
-
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      <label className="cursor-pointer text-xs font-bold text-zinc-700 hover:text-zinc-900 bg-white border border-zinc-200 hover:bg-zinc-50 px-2.5 py-1.5 rounded-lg transition shadow-2xs">
-                        Change
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleFileUpload}
-                          className="hidden"
-                        />
+                {showAdvanced && (
+                  <div className="mt-3 p-3.5 bg-zinc-50 border border-zinc-200 rounded-2xl space-y-3">
+                    <div>
+                      <label className="block text-[11px] font-bold text-zinc-700 mb-1">
+                        Brand Name
                       </label>
-                      <button
-                        type="button"
-                        onClick={() => setForm({ ...form, imageUrl: "" })}
-                        className="text-xs font-bold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 px-2.5 py-1.5 rounded-lg transition"
-                      >
-                        Remove
-                      </button>
+                      <input
+                        type="text"
+                        value={form.title}
+                        onChange={(e) => setForm({ ...form, title: e.target.value })}
+                        placeholder="e.g. Acme Studio"
+                        className="w-full border border-zinc-200 rounded-lg px-3 py-1.5 text-xs bg-white focus:outline-none"
+                      />
                     </div>
-                  </div>
-                ) : (
-                  /* Clean Dropzone Upload Area */
-                  <div className="space-y-2">
-                    <label className="group flex flex-col items-center justify-center border-2 border-dashed border-zinc-200 hover:border-zinc-400 bg-zinc-50/50 hover:bg-zinc-50 rounded-2xl p-4 cursor-pointer transition text-center">
-                      <div className="w-8 h-8 rounded-full bg-white border border-zinc-200 grid place-items-center text-zinc-600 text-sm shadow-2xs group-hover:scale-105 transition">
-                        ↑
-                      </div>
-                      <div className="text-xs font-bold text-zinc-800 mt-2">
-                        Click to upload logo image
-                      </div>
-                      <div className="text-[11px] text-zinc-400 mt-0.5">
-                        Renders directly inside your square on the canvas
-                      </div>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleFileUpload}
-                        className="hidden"
-                      />
-                    </label>
 
-                    {/* Or URL input fallback */}
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider">or URL:</span>
-                      <input
-                        type="url"
-                        value={form.imageUrl}
-                        onChange={(e) =>
-                          setForm({ ...form, imageUrl: e.target.value })
-                        }
-                        placeholder="https://.../logo.png"
-                        className="flex-1 border border-zinc-200 rounded-lg px-2.5 py-1.5 text-xs text-zinc-800 placeholder:text-zinc-400 bg-zinc-50 focus:bg-white focus:outline-none"
-                      />
+                    <div>
+                      <label className="block text-[11px] font-bold text-zinc-700 mb-1">
+                        Upload Logo Image
+                      </label>
+                      {form.imageUrl ? (
+                        <div className="flex items-center gap-2 bg-white border border-zinc-200 rounded-xl p-2">
+                          <img
+                            src={form.imageUrl}
+                            alt="preview"
+                            className="w-8 h-8 rounded-lg object-contain bg-zinc-50 border border-zinc-100"
+                          />
+                          <span className="text-xs text-zinc-600 truncate flex-1">
+                            Rendering on grid
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setForm({ ...form, imageUrl: "" })}
+                            className="text-xs text-red-600 font-bold hover:underline"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      ) : (
+                        <label className="flex items-center justify-center gap-2 border border-dashed border-zinc-300 hover:border-zinc-400 bg-white rounded-xl p-2.5 cursor-pointer text-xs font-bold text-zinc-700">
+                          <span>📁 Choose Image File (&lt;2MB)</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleFileUpload}
+                            className="hidden"
+                          />
+                        </label>
+                      )}
                     </div>
                   </div>
                 )}
               </div>
 
-              {/* Category Pills */}
-              <div>
-                <label className="block text-xs font-bold text-zinc-800 mb-1.5">
-                  Category
-                </label>
-                <div className="flex flex-wrap gap-1.5">
-                  {["AI", "SaaS", "DevTools", "Fintech", "Crypto", "Design", "Other"].map(
-                    (cat) => (
-                      <button
-                        key={cat}
-                        type="button"
-                        onClick={() => setForm({ ...form, category: cat })}
-                        className={`px-3 py-1 rounded-full text-xs font-bold border transition ${
-                          form.category === cat
-                            ? "bg-zinc-950 text-white border-zinc-950 shadow-xs"
-                            : "bg-zinc-50/80 border-zinc-200 text-zinc-700 hover:bg-zinc-100"
-                        }`}
-                      >
-                        {cat}
-                      </button>
-                    )
-                  )}
-                </div>
-              </div>
-
-              {/* Checkout Action */}
-              <div className="pt-3">
-                <button
-                  onClick={confirmReserve}
-                  disabled={reserving || !selection}
-                  className="w-full bg-[#ff3b30] hover:bg-[#e5352c] text-white rounded-2xl py-3.5 font-black text-base transition shadow-md hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  {reserving ? (
-                    "Locking Spot on Canvas…"
-                  ) : (
-                    <>
-                      <span>Lock & Checkout</span>
-                      <span className="bg-white/20 px-2.5 py-0.5 rounded-full text-sm font-mono">
-                        {selection ? formatCents(selection.priceCents) : "$1.00"}
-                      </span>
-                      <span>→</span>
-                    </>
-                  )}
-                </button>
-                <div className="text-[11px] text-center text-zinc-500 mt-2.5 flex items-center justify-center gap-1.5">
-                  <span>⚡</span>
-                  <span>10-minute hold · Instant 30-day placement on payment</span>
-                </div>
-              </div>
+              {/* 1-Click Outbid Button */}
+              <button
+                onClick={confirmReserve}
+                disabled={reserving || !selection}
+                className="w-full bg-[#ff3b30] hover:bg-[#e5352c] text-white rounded-2xl py-3.5 font-black text-base transition shadow-md hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {reserving ? (
+                  "Locking Spot…"
+                ) : (
+                  <>
+                    <span>Claim Square</span>
+                    <span className="bg-white/20 px-2.5 py-0.5 rounded-full text-sm font-mono">
+                      {selection ? formatCents(selection.priceCents) : "$1.00"}
+                    </span>
+                    <span>→</span>
+                  </>
+                )}
+              </button>
             </div>
           </div>
 
-          {/* Leaderboard Spotlight */}
+          {/* Live Leaderboard */}
           <Leaderboard rows={leaderboardRows} />
         </div>
       </section>
     </div>
   );
 }
+
 
 
