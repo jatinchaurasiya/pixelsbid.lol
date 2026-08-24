@@ -110,10 +110,14 @@ export async function POST(req: Request) {
       }
 
       const rows = await sql`SELECT id, reservation_expires_at FROM pixel_blocks WHERE id = ${id}`;
+      const expiresAtDate = rows[0]?.reservation_expires_at
+        ? new Date(rows[0].reservation_expires_at).toISOString()
+        : new Date(Date.now() + 600000).toISOString();
+
       return NextResponse.json({
         id,
         priceCents,
-        reservationExpiresAt: rows[0]?.reservation_expires_at || new Date(Date.now() + 600000).toISOString(),
+        reservationExpiresAt: expiresAtDate,
       });
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
@@ -163,10 +167,10 @@ export async function GET(req: Request) {
           clicks: r.clicks,
           impressions: r.impressions,
           priceCents: r.price_cents,
-          reservedAt: r.reserved_at,
-          reservationExpiresAt: r.reservation_expires_at,
-          rentedAt: r.rented_at,
-          expiresAt: r.expires_at,
+          reservedAt: r.reserved_at ? new Date(r.reserved_at as string | Date).toISOString() : null,
+          reservationExpiresAt: r.reservation_expires_at ? new Date(r.reservation_expires_at as string | Date).toISOString() : null,
+          rentedAt: r.rented_at ? new Date(r.rented_at as string | Date).toISOString() : null,
+          expiresAt: r.expires_at ? new Date(r.expires_at as string | Date).toISOString() : null,
         });
       }
     } catch (e) {

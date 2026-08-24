@@ -44,11 +44,16 @@ export async function POST(req: Request) {
           return NextResponse.json({ error: `Block is currently '${r.status}', cannot checkout.` }, { status: 409 });
         }
 
-        const expiresAt = r.reservation_expires_at ? new Date(r.reservation_expires_at as string) : null;
-        if (expiresAt && expiresAt < new Date()) {
+        const expiresAt = r.reservation_expires_at
+          ? new Date(r.reservation_expires_at as string | Date).getTime()
+          : null;
+        if (expiresAt && expiresAt < Date.now()) {
           // Mark expired in DB
           await sql`UPDATE pixel_blocks SET status = 'expired' WHERE id = ${reservationId}`;
-          return NextResponse.json({ error: "Reservation hold has expired (10-minute limit). Please select again." }, { status: 410 });
+          return NextResponse.json(
+            { error: "Reservation hold has expired (10-minute limit). Please select again." },
+            { status: 410 }
+          );
         }
 
         block = {

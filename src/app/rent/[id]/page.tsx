@@ -41,6 +41,7 @@ export default function RentPage() {
   useEffect(() => {
     if (!block?.reservationExpiresAt) return;
     const expiresAt = new Date(block.reservationExpiresAt as string).getTime();
+    if (isNaN(expiresAt)) return;
 
     const updateTimer = () => {
       const now = Date.now();

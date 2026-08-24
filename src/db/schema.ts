@@ -88,10 +88,10 @@ export const pixelBlocks = pgTable("pixel_blocks", {
   clicks: integer("clicks").notNull().default(0),
   impressions: integer("impressions").notNull().default(0),
   priceCents: integer("price_cents").notNull(),
-  reservedAt: timestamp("reserved_at").defaultNow(),
-  reservationExpiresAt: timestamp("reservation_expires_at"),
-  rentedAt: timestamp("rented_at"),
-  expiresAt: timestamp("expires_at"),
+  reservedAt: timestamp("reserved_at", { withTimezone: true }).defaultNow(),
+  reservationExpiresAt: timestamp("reservation_expires_at", { withTimezone: true }),
+  rentedAt: timestamp("rented_at", { withTimezone: true }),
+  expiresAt: timestamp("expires_at", { withTimezone: true }),
 });
 
 export const orders = pgTable("orders", {
@@ -101,8 +101,8 @@ export const orders = pgTable("orders", {
   dodoPaymentId: text("dodo_payment_id").unique(),
   amountCents: integer("amount_cents").notNull(),
   status: text("status").notNull().default("pending"),
-  createdAt: timestamp("created_at").defaultNow(),
-  paidAt: timestamp("paid_at"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  paidAt: timestamp("paid_at", { withTimezone: true }),
 });
 
 export const moderationQueue = pgTable("moderation_queue", {
