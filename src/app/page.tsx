@@ -139,30 +139,95 @@ export default function HomePage() {
   const [heroUrl, setHeroUrl] = useState("");
   const [heroCategory, setHeroCategory] = useState("AI");
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [isExtracting, setIsExtracting] = useState(false);
+  const [extractedMeta, setExtractedMeta] = useState<{
+    title?: string;
+    description?: string;
+    imageUrl?: string;
+    domain?: string;
+  } | null>(null);
+
+  // Expanded high-converting industry niches
+  const niches = [
+    { id: "AI", label: "AI & Machine Learning" },
+    { id: "SaaS", label: "SaaS & Software" },
+    { id: "DevTools", label: "Developer Tools & APIs" },
+    { id: "Marketing", label: "Marketing, SEO & Growth" },
+    { id: "Design", label: "Design & Creative Tools" },
+    { id: "Fintech", label: "Fintech, Crypto & Web3" },
+    { id: "Productivity", label: "Productivity & Workflow" },
+    { id: "Ecommerce", label: "E-commerce & D2C Brands" },
+    { id: "NoCode", label: "No-Code & Automation" },
+    { id: "Security", label: "Cybersecurity & Privacy" },
+    { id: "Media", label: "Media & Newsletters" },
+    { id: "Community", label: "Community & Social" },
+    { id: "Other", label: "Other / Launch" },
+  ];
+
+  // Auto-extract metadata from URL / handle with debounce
+  useEffect(() => {
+    if (!heroUrl || heroUrl.trim().length < 3) {
+      setExtractedMeta(null);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setIsExtracting(true);
+      try {
+        const res = await fetch("/api/metadata/extract", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: heroUrl.trim() }),
+        });
+        const meta = await res.json();
+        if (meta.success) {
+          setExtractedMeta({
+            title: meta.title,
+            description: meta.description,
+            imageUrl: meta.imageUrl,
+            domain: meta.domain,
+          });
+
+          // Sync into form and live canvas
+          setForm((f) => ({
+            ...f,
+            title: f.title || meta.title || "",
+            imageUrl: f.imageUrl || meta.imageUrl || "",
+            targetUrl: meta.targetUrl || heroUrl,
+            category: f.category || meta.category || "AI",
+          }));
+
+          if (meta.category) {
+            setHeroCategory(meta.category);
+          }
+        }
+      } catch (err) {
+        console.warn("Metadata extraction failed:", err);
+      } finally {
+        setIsExtracting(false);
+      }
+    }, 600);
+
+    return () => clearTimeout(timer);
+  }, [heroUrl]);
 
   const handleHeroOutbid = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!heroUrl.trim()) return;
 
     let target = heroUrl.trim();
-    let title = target;
+    let title = extractedMeta?.title || form.title || target;
 
     if (target.startsWith("@")) {
       const handle = target.replace(/^@/, "");
       target = `https://x.com/${handle}`;
-      title = `@${handle}`;
+      title = title || `@${handle}`;
     } else if (!target.startsWith("http://") && !target.startsWith("https://")) {
       target = `https://${target}`;
       try {
-        title = new URL(target).hostname.replace(/^www\./, "");
+        title = title || new URL(target).hostname.replace(/^www\./, "");
       } catch {
-        title = target;
-      }
-    } else {
-      try {
-        title = new URL(target).hostname.replace(/^www\./, "");
-      } catch {
-        title = target;
+        title = title || target;
       }
     }
 
@@ -180,9 +245,9 @@ export default function HomePage() {
           y,
           size,
           userId: "anon",
-          title: form.title.trim() || title,
+          title: title.trim(),
           targetUrl: target,
-          imageUrl: form.imageUrl.trim() || undefined,
+          imageUrl: form.imageUrl || extractedMeta?.imageUrl || undefined,
           category: heroCategory,
         }),
       });
@@ -217,59 +282,103 @@ export default function HomePage() {
           The internet&apos;s real-time pay-to-rank billboard. Your position and size on the board reflect your bid.
         </p>
 
-        {/* Viral Hero Input Bar (outbid.lol format) */}
-        <form onSubmit={handleHeroOutbid} className="mt-8 mx-auto max-w-2xl">
-          <div className="flex flex-col sm:flex-row items-center gap-2 p-1.5 bg-white border border-zinc-200 rounded-2xl sm:rounded-full shadow-xs hover:border-zinc-300 focus-within:border-zinc-400 focus-within:ring-4 focus-within:ring-zinc-900/5 transition">
-            {/* Input */}
-            <div className="flex items-center gap-2.5 px-4 py-2.5 sm:py-2 flex-1 w-full">
-              <span className="text-zinc-400 text-sm">🌐</span>
-              <input
-                type="text"
-                required
-                value={heroUrl}
-                onChange={(e) => {
-                  setHeroUrl(e.target.value);
-                  setForm((f) => ({ ...f, targetUrl: e.target.value }));
-                }}
-                placeholder="Your product URL or @handle"
-                className="w-full bg-transparent text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none"
-              />
-            </div>
+        {/* Viral Hero Input Bar with Auto Metadata Extractor */}
+        <div className="mt-8 mx-auto max-w-2xl">
+          <form onSubmit={handleHeroOutbid}>
+            <div className="flex flex-col sm:flex-row items-center gap-2 p-1.5 bg-white border border-zinc-200/90 rounded-2xl sm:rounded-full shadow-xs hover:border-zinc-300 focus-within:border-zinc-400 focus-within:ring-4 focus-within:ring-zinc-900/5 transition">
+              {/* URL Input */}
+              <div className="flex items-center gap-2.5 px-4 py-2.5 sm:py-2 flex-1 w-full">
+                {isExtracting ? (
+                  <span className="w-4 h-4 rounded-full border-2 border-zinc-300 border-t-zinc-900 animate-spin shrink-0" />
+                ) : extractedMeta?.imageUrl ? (
+                  <img
+                    src={extractedMeta.imageUrl}
+                    alt="Favicon"
+                    className="w-5 h-5 rounded-md object-contain shrink-0 bg-white border border-zinc-100"
+                    onError={(e) => {
+                      (e.target as HTMLElement).style.display = "none";
+                    }}
+                  />
+                ) : (
+                  <span className="text-zinc-400 text-sm shrink-0">🌐</span>
+                )}
+                <input
+                  type="text"
+                  required
+                  value={heroUrl}
+                  onChange={(e) => {
+                    setHeroUrl(e.target.value);
+                    setForm((f) => ({ ...f, targetUrl: e.target.value }));
+                  }}
+                  placeholder="Your product URL or @handle"
+                  className="w-full bg-transparent text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none"
+                />
+              </div>
 
-            {/* Category Dropdown */}
-            <div className="w-full sm:w-auto px-2 sm:px-0">
-              <select
-                value={heroCategory}
-                onChange={(e) => {
-                  setHeroCategory(e.target.value);
-                  setForm((f) => ({ ...f, category: e.target.value }));
-                }}
-                className="w-full sm:w-auto border sm:border-0 border-zinc-200 bg-zinc-50 sm:bg-transparent rounded-full px-3.5 py-2 text-xs font-bold text-zinc-700 focus:outline-none cursor-pointer"
+              {/* Niche Category Dropdown */}
+              <div className="w-full sm:w-auto px-2 sm:px-0">
+                <select
+                  value={heroCategory}
+                  onChange={(e) => {
+                    setHeroCategory(e.target.value);
+                    setForm((f) => ({ ...f, category: e.target.value }));
+                  }}
+                  className="w-full sm:w-auto border sm:border-0 border-zinc-200 bg-zinc-50 sm:bg-transparent rounded-full px-3.5 py-2 text-xs font-bold text-zinc-700 focus:outline-none cursor-pointer"
+                >
+                  {niches.map((n) => (
+                    <option key={n.id} value={n.id}>
+                      {n.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Outbid Button */}
+              <button
+                type="submit"
+                disabled={reserving}
+                className="w-full sm:w-auto rounded-full bg-[#f87171] hover:bg-[#ef4444] text-white px-7 py-2.5 font-bold text-sm transition shadow-2xs hover:scale-[1.02] active:scale-[0.98] shrink-0 disabled:opacity-50"
               >
-                <option value="AI">AI & ML</option>
-                <option value="SaaS">SaaS & Apps</option>
-                <option value="DevTools">Developer Tools</option>
-                <option value="Marketing">Marketing & SEO</option>
-                <option value="Fintech">Fintech & Web3</option>
-                <option value="Design">Design & Creative</option>
-                <option value="Other">Other</option>
-              </select>
+                {reserving ? "Reserving…" : "Outbid"}
+              </button>
             </div>
+          </form>
 
-            {/* Outbid Button */}
-            <button
-              type="submit"
-              disabled={reserving}
-              className="w-full sm:w-auto rounded-full bg-[#f87171] hover:bg-[#ef4444] text-white px-7 py-2.5 font-bold text-sm transition shadow-2xs hover:scale-[1.02] active:scale-[0.98] shrink-0 disabled:opacity-50"
-            >
-              {reserving ? "Reserving…" : "Outbid"}
-            </button>
-          </div>
+          {/* Real-time Extracted Metadata Info Pill */}
+          {extractedMeta && (
+            <div className="mt-3 mx-auto max-w-xl bg-zinc-50 border border-zinc-200/80 rounded-2xl p-3 flex items-start gap-3 text-left shadow-2xs animate-in fade-in slide-in-from-top-1 duration-200">
+              <div className="w-10 h-10 rounded-xl bg-white border border-zinc-200 p-1 flex items-center justify-center shrink-0 shadow-2xs overflow-hidden mt-0.5">
+                {extractedMeta.imageUrl ? (
+                  <img
+                    src={extractedMeta.imageUrl}
+                    alt="Logo"
+                    className="w-full h-full object-contain"
+                  />
+                ) : (
+                  <span className="text-xs font-black text-zinc-700">PX</span>
+                )}
+              </div>
+
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-black text-zinc-900 truncate">
+                    {extractedMeta.title || extractedMeta.domain}
+                  </span>
+                  <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.2 rounded-full shrink-0">
+                    ✓ Metadata Detected
+                  </span>
+                </div>
+                <p className="text-[11px] text-zinc-500 mt-0.5 line-clamp-2 leading-relaxed">
+                  {extractedMeta.description}
+                </p>
+              </div>
+            </div>
+          )}
 
           <p className="mt-3 text-xs text-zinc-500 font-medium">
             Already on the list? Enter the same URL or @handle and up your bid.
           </p>
-        </form>
+        </div>
       </section>
 
       {/* Main Canvas & Interactive Grid Section */}

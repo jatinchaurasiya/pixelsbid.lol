@@ -278,14 +278,19 @@ export default function RentPage() {
                   onChange={e => setForm({ ...form, category: e.target.value })}
                   className="mt-1 w-full border border-zinc-200 rounded-xl px-4 py-3 text-sm bg-white focus:ring-2 focus:ring-zinc-900 focus:outline-none"
                 >
-                  <option>AI</option>
-                  <option>Tools</option>
-                  <option>Design</option>
-                  <option>DevTools</option>
-                  <option>Marketing</option>
-                  <option>Fintech</option>
-                  <option>Social</option>
-                  <option>Other</option>
+                  <option value="AI">AI & Machine Learning</option>
+                  <option value="SaaS">SaaS & Software</option>
+                  <option value="DevTools">Developer Tools & APIs</option>
+                  <option value="Marketing">Marketing, SEO & Growth</option>
+                  <option value="Design">Design & Creative Tools</option>
+                  <option value="Fintech">Fintech, Crypto & Web3</option>
+                  <option value="Productivity">Productivity & Workflow</option>
+                  <option value="Ecommerce">E-commerce & D2C Brands</option>
+                  <option value="NoCode">No-Code & Automation</option>
+                  <option value="Security">Cybersecurity & Privacy</option>
+                  <option value="Media">Media & Newsletters</option>
+                  <option value="Community">Community & Social</option>
+                  <option value="Other">Other / Launch</option>
                 </select>
               </div>
               <div>

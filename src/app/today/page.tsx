@@ -141,13 +141,20 @@ export default function TodayPage() {
   };
 
   const categories = [
-    { id: "all", label: "All Categories" },
-    { id: "AI", label: "AI & ML" },
-    { id: "SaaS", label: "SaaS & Apps" },
-    { id: "DevTools", label: "Developer Tools" },
-    { id: "Marketing", label: "Marketing & SEO" },
-    { id: "Fintech", label: "Fintech & Web3" },
-    { id: "Design", label: "Design & Creative" },
+    { id: "all", label: "All Niches" },
+    { id: "AI", label: "AI & Machine Learning" },
+    { id: "SaaS", label: "SaaS & Software" },
+    { id: "DevTools", label: "Developer Tools & APIs" },
+    { id: "Marketing", label: "Marketing, SEO & Growth" },
+    { id: "Design", label: "Design & Creative Tools" },
+    { id: "Fintech", label: "Fintech, Crypto & Web3" },
+    { id: "Productivity", label: "Productivity & Workflow" },
+    { id: "Ecommerce", label: "E-commerce & D2C Brands" },
+    { id: "NoCode", label: "No-Code & Automation" },
+    { id: "Security", label: "Cybersecurity & Privacy" },
+    { id: "Media", label: "Media & Newsletters" },
+    { id: "Community", label: "Community & Social" },
+    { id: "Other", label: "Other / Launch" },
   ];
 
   return (
