@@ -133,19 +133,23 @@ export async function POST(req: Request) {
 
       // 3. Extract Best Icon / Logo
       let imageUrl = "";
-      const appleTouchIconMatch = html.match(/<link[^>]+rel=["']apple-touch-icon["'][^>]+href=["']([^"']+)["']/i) ||
-                                  html.match(/<link[^>]+href=["']([^"']+)["'][^>]+rel=["']apple-touch-icon["']/i);
+      const appleTouchIconMatch = html.match(/<link[^>]+rel=["'](?:apple-touch-icon|apple-touch-icon-precomposed)["'][^>]+href=["']([^"']+)["']/i) ||
+                                  html.match(/<link[^>]+href=["']([^"']+)["'][^>]+rel=["'](?:apple-touch-icon|apple-touch-icon-precomposed)["']/i);
+      const svgIconMatch = html.match(/<link[^>]+rel=["'](?:shortcut )?icon["'][^>]+type=["']image\/svg\+xml["'][^>]+href=["']([^"']+)["']/i) ||
+                           html.match(/<link[^>]+href=["']([^"']+)["'][^>]+type=["']image\/svg\+xml["']/i);
       const iconMatch = html.match(/<link[^>]+rel=["'](?:shortcut )?icon["'][^>]+href=["']([^"']+)["']/i) ||
                         html.match(/<link[^>]+href=["']([^"']+)["'][^>]+rel=["'](?:shortcut )?icon["']/i);
       const ogImageMatch = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i) ||
                            html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
 
-      if (appleTouchIconMatch && appleTouchIconMatch[1]) {
-        imageUrl = resolveUrl(appleTouchIconMatch[1].trim(), targetUrl);
-      } else if (iconMatch && iconMatch[1] && !iconMatch[1].endsWith(".ico")) {
-        imageUrl = resolveUrl(iconMatch[1].trim(), targetUrl);
+      if (svgIconMatch && svgIconMatch[1]) {
+        imageUrl = resolveUrl(svgIconMatch[1], targetUrl);
+      } else if (appleTouchIconMatch && appleTouchIconMatch[1]) {
+        imageUrl = resolveUrl(appleTouchIconMatch[1], targetUrl);
+      } else if (iconMatch && iconMatch[1]) {
+        imageUrl = resolveUrl(iconMatch[1], targetUrl);
       } else if (ogImageMatch && ogImageMatch[1]) {
-        imageUrl = resolveUrl(ogImageMatch[1].trim(), targetUrl);
+        imageUrl = resolveUrl(ogImageMatch[1], targetUrl);
       } else {
         imageUrl = fallbackFavicon;
       }
@@ -202,7 +206,8 @@ export async function POST(req: Request) {
 
 function resolveUrl(href: string, base: string): string {
   try {
-    return new URL(href, base).href;
+    const clean = decodeHtmlEntities(href.trim());
+    return new URL(clean, base).href;
   } catch {
     return href;
   }

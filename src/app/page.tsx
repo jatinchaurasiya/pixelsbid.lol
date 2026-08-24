@@ -164,6 +164,35 @@ export default function HomePage() {
     { id: "Other", label: "Other / Launch" },
   ];
 
+  // Instant client-side metadata derived as user types
+  const instantMeta = (() => {
+    if (!heroUrl || heroUrl.trim().length < 2) return null;
+    const trimmed = heroUrl.trim();
+    if (trimmed.startsWith("@")) {
+      const h = trimmed.slice(1).replace(/[^a-zA-Z0-9_]/g, "");
+      return {
+        title: `@${h}`,
+        imageUrl: `https://unavatar.io/x/${h}`,
+        domain: "x.com",
+      };
+    }
+    try {
+      const domain = trimmed.replace(/^https?:\/\//, "").split("/")[0].replace(/^www\./, "");
+      if (domain.includes(".") && domain.length > 3) {
+        const name = domain.split(".")[0].split("-").map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(" ");
+        return {
+          title: name,
+          imageUrl: `https://www.google.com/s2/favicons?domain=${domain}&sz=128`,
+          domain,
+        };
+      }
+    } catch {}
+    return null;
+  })();
+
+  const activeLogo = form.imageUrl || extractedMeta?.imageUrl || instantMeta?.imageUrl || "";
+  const activeTitle = form.title || extractedMeta?.title || instantMeta?.title || "";
+
   // Auto-extract metadata from URL / handle with debounce
   useEffect(() => {
     if (!heroUrl || heroUrl.trim().length < 3) {
@@ -191,10 +220,10 @@ export default function HomePage() {
           // Sync into form and live canvas
           setForm((f) => ({
             ...f,
-            title: f.title || meta.title || "",
-            imageUrl: f.imageUrl || meta.imageUrl || "",
+            title: meta.title || f.title || "",
+            imageUrl: meta.imageUrl || f.imageUrl || "",
             targetUrl: meta.targetUrl || heroUrl,
-            category: f.category || meta.category || "AI",
+            category: meta.category || f.category || "AI",
           }));
 
           if (meta.category) {
@@ -206,7 +235,7 @@ export default function HomePage() {
       } finally {
         setIsExtracting(false);
       }
-    }, 600);
+    }, 400);
 
     return () => clearTimeout(timer);
   }, [heroUrl]);
@@ -216,7 +245,7 @@ export default function HomePage() {
     if (!heroUrl.trim()) return;
 
     let target = heroUrl.trim();
-    let title = extractedMeta?.title || form.title || target;
+    let title = activeTitle || target;
 
     if (target.startsWith("@")) {
       const handle = target.replace(/^@/, "");
@@ -247,7 +276,7 @@ export default function HomePage() {
           userId: "anon",
           title: title.trim(),
           targetUrl: target,
-          imageUrl: form.imageUrl || extractedMeta?.imageUrl || undefined,
+          imageUrl: activeLogo || undefined,
           category: heroCategory,
         }),
       });
@@ -289,14 +318,16 @@ export default function HomePage() {
               {/* URL Input */}
               <div className="flex items-center gap-2.5 px-4 py-2.5 sm:py-2 flex-1 w-full">
                 {isExtracting ? (
-                  <span className="w-4 h-4 rounded-full border-2 border-zinc-300 border-t-zinc-900 animate-spin shrink-0" />
-                ) : extractedMeta?.imageUrl ? (
+                  <span className="w-5 h-5 rounded-full border-2 border-zinc-300 border-t-zinc-900 animate-spin shrink-0" />
+                ) : activeLogo ? (
                   <img
-                    src={extractedMeta.imageUrl}
+                    src={activeLogo}
                     alt="Favicon"
-                    className="w-5 h-5 rounded-md object-contain shrink-0 bg-white border border-zinc-100"
+                    className="w-5 h-5 rounded-md object-contain shrink-0 bg-white border border-zinc-200"
                     onError={(e) => {
-                      (e.target as HTMLElement).style.display = "none";
+                      if (instantMeta?.domain && !activeLogo.includes("google.com/s2/favicons")) {
+                        (e.target as HTMLImageElement).src = `https://www.google.com/s2/favicons?domain=${instantMeta.domain}&sz=128`;
+                      }
                     }}
                   />
                 ) : (
@@ -345,14 +376,19 @@ export default function HomePage() {
           </form>
 
           {/* Real-time Extracted Metadata Info Pill */}
-          {extractedMeta && (
+          {(extractedMeta || instantMeta) && (
             <div className="mt-3 mx-auto max-w-xl bg-zinc-50 border border-zinc-200/80 rounded-2xl p-3 flex items-start gap-3 text-left shadow-2xs animate-in fade-in slide-in-from-top-1 duration-200">
               <div className="w-10 h-10 rounded-xl bg-white border border-zinc-200 p-1 flex items-center justify-center shrink-0 shadow-2xs overflow-hidden mt-0.5">
-                {extractedMeta.imageUrl ? (
+                {activeLogo ? (
                   <img
-                    src={extractedMeta.imageUrl}
+                    src={activeLogo}
                     alt="Logo"
                     className="w-full h-full object-contain"
+                    onError={(e) => {
+                      if (instantMeta?.domain && !activeLogo.includes("google.com/s2/favicons")) {
+                        (e.target as HTMLImageElement).src = `https://www.google.com/s2/favicons?domain=${instantMeta.domain}&sz=128`;
+                      }
+                    }}
                   />
                 ) : (
                   <span className="text-xs font-black text-zinc-700">PX</span>
@@ -362,14 +398,14 @@ export default function HomePage() {
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-black text-zinc-900 truncate">
-                    {extractedMeta.title || extractedMeta.domain}
+                    {activeTitle || instantMeta?.domain}
                   </span>
                   <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.2 rounded-full shrink-0">
-                    ✓ Metadata Detected
+                    {extractedMeta ? "✓ Metadata Detected" : "● Live Preview"}
                   </span>
                 </div>
                 <p className="text-[11px] text-zinc-500 mt-0.5 line-clamp-2 leading-relaxed">
-                  {extractedMeta.description}
+                  {extractedMeta?.description || `Ready to claim your 30-day billboard spot on pixelsbid.lol`}
                 </p>
               </div>
             </div>
@@ -398,8 +434,8 @@ export default function HomePage() {
               config={data.config}
               selection={selection}
               onSelect={handleSelect}
-              previewTitle={form.title || heroUrl}
-              previewImageUrl={form.imageUrl}
+              previewTitle={activeTitle}
+              previewImageUrl={activeLogo}
             />
           )}
 

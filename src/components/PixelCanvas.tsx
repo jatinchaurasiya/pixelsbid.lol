@@ -61,12 +61,27 @@ export default function PixelCanvas({
       return;
     }
     const img = new Image();
-    img.crossOrigin = "anonymous";
     img.onload = () => {
       previewImgRef.current = img;
       setTick((t) => t + 1);
     };
     img.onerror = () => {
+      // If error, try fallback icon
+      if (!previewImageUrl.includes("google.com/s2/favicons")) {
+        try {
+          const u = new URL(previewImageUrl);
+          const fb = `https://www.google.com/s2/favicons?domain=${u.hostname}&sz=128`;
+          const fallbackImg = new Image();
+          fallbackImg.onload = () => {
+            previewImgRef.current = fallbackImg;
+            setTick((t) => t + 1);
+          };
+          fallbackImg.src = fb;
+          return;
+        } catch {
+          // ignore
+        }
+      }
       previewImgRef.current = null;
     };
     img.src = previewImageUrl;
@@ -241,9 +256,26 @@ export default function PixelCanvas({
         let img = imgCache.current.get(key);
         if (b.imageUrl && !img) {
           img = new Image();
-          img.crossOrigin = "anonymous";
           img.onload = () => setTick((t) => t + 1);
-          img.onerror = () => setTick((t) => t + 1);
+          img.onerror = () => {
+            // If primary image fails, fallback to domain favicon if possible
+            if (b.targetUrl && !b.imageUrl?.includes("google.com/s2/favicons")) {
+              try {
+                const u = new URL(b.targetUrl.startsWith("http") ? b.targetUrl : `https://${b.targetUrl}`);
+                const fb = `https://www.google.com/s2/favicons?domain=${u.hostname}&sz=128`;
+                const fallbackImg = new Image();
+                fallbackImg.onload = () => {
+                  imgCache.current.set(key, fallbackImg);
+                  setTick((t) => t + 1);
+                };
+                fallbackImg.src = fb;
+                return;
+              } catch {
+                // ignore
+              }
+            }
+            setTick((t) => t + 1);
+          };
           img.src = b.imageUrl;
           imgCache.current.set(key, img);
         }
