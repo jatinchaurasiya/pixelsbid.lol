@@ -1,10 +1,11 @@
 import { headers } from "next/headers";
-import { auth } from "@/lib/auth";
+import { getAuth } from "@/lib/auth";
 
 export async function getSession() {
   try {
     const h = await headers();
-    const session = await auth.api.getSession({ headers: h });
+    const auth = getAuth();
+    const session = await (auth as unknown as { api: { getSession: (a: unknown) => Promise<unknown> } }).api.getSession({ headers: h });
     return session;
   } catch {
     return null;
