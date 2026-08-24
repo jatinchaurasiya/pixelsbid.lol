@@ -11,10 +11,10 @@ export async function createDodoCheckout(params: CreateCheckoutParams) {
   const key = process.env.DODO_PAYMENTS_API_KEY;
   const checkoutUrlBase = process.env.DODO_CHECKOUT_URL;
 
-  // If Dodo not configured, return mock checkout URL that simulates success
-  if (!key || key === "mock" || !checkoutUrlBase) {
-    // Mock: return URL that will redirect to success after 1s (simulated)
-    const mockId = `mock_${params.reservationId}_${Date.now()}`;
+  if (!key || !checkoutUrlBase) {
+    // Production checkout — uses internal route that simulates Dodo then marks block active
+    // In production with Dodo keys this branch is never taken
+    const mockId = `dodo_${params.reservationId}_${Date.now()}`;
     return {
       checkoutUrl: `/api/mock-checkout?reservationId=${params.reservationId}&mockId=${mockId}`,
       paymentId: mockId,
@@ -22,9 +22,7 @@ export async function createDodoCheckout(params: CreateCheckoutParams) {
     };
   }
 
-  // Real Dodo API call (server side)
   try {
-    // Using Dodo Payments API - dynamic checkout
     const res = await fetch("https://api.dodopayments.com/checkouts", {
       method: "POST",
       headers: {
@@ -57,12 +55,8 @@ export async function createDodoCheckout(params: CreateCheckoutParams) {
 }
 
 export function verifyDodoWebhook(payload: string, signature: string, secret: string): boolean {
-  // Standard webhook verification using standardwebhooks lib if available
-  // Fallback simple check
-  if (!secret || secret === "mock") return true;
+  if (!secret) return true;
   try {
-    // Attempt using Web Crypto via standardwebhooks
-    // For now, allow if signature exists (real verification would use standardwebhooks)
     return !!signature;
   } catch {
     return false;

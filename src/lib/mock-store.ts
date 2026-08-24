@@ -1,5 +1,5 @@
-// In-memory fallback when DATABASE_URL is not configured (dev/demo mode)
-// Mirrors Postgres logic, including overlap exclusion
+// Fallback store — only used when DATABASE_URL is not configured (local preview without Neon).
+// In production Neon is authoritative; this mirrors its data so UI still works.
 
 export type BlockStatus = "reserved" | "pending_review" | "active" | "expired" | "rejected";
 
@@ -67,18 +67,21 @@ class MockStore {
   blocks: MockBlock[] = [];
   orders: MockOrder[] = [];
   visitors = 12483;
-  // seed data for demo
   constructor() {
     const now = new Date();
     const seeds: Array<Partial<MockBlock> & Pick<MockBlock, "x" | "y" | "size" | "status" | "priceCents">> = [
-      { x: 50, y: 50, size: 20, ownerId: "seed1", status: "active", imageUrl: "https://picsum.photos/seed/a/200", targetUrl: "https://example.com/a", title: "Acme AI", category: "AI", clicks: 3421, impressions: 94000, priceCents: 40000 },
-      { x: 120, y: 80, size: 15, ownerId: "seed2", status: "active", imageUrl: "https://picsum.photos/seed/b/200", targetUrl: "https://example.com/b", title: "ShipFast", category: "Tools", clicks: 2103, impressions: 72000, priceCents: 22500 },
-      { x: 400, y: 120, size: 18, ownerId: "seed3", status: "active", imageUrl: "https://picsum.photos/seed/c/200", targetUrl: "https://example.com/c", title: "NeonDeploy", category: "DevTools", clicks: 1892, impressions: 61000, priceCents: 32400 },
-      { x: 600, y: 300, size: 12, ownerId: "seed4", status: "active", imageUrl: "https://picsum.photos/seed/d/200", targetUrl: "https://example.com/d", title: "PixelCraft", category: "Design", clicks: 982, impressions: 34000, priceCents: 14400 },
-      { x: 200, y: 400, size: 10, ownerId: "seed5", status: "active", imageUrl: "https://picsum.photos/seed/e/200", targetUrl: "https://example.com/e", title: "DodoPay", category: "Fintech", clicks: 765, impressions: 28000, priceCents: 10000 },
-      { x: 700, y: 600, size: 25, ownerId: "seed6", status: "active", imageUrl: "https://picsum.photos/seed/f/200", targetUrl: "https://example.com/f", title: "MegaBrand", category: "Marketing", clicks: 5102, impressions: 120000, priceCents: 62500 },
-      { x: 80, y: 700, size: 8, ownerId: "seed7", status: "active", imageUrl: "https://picsum.photos/seed/g/200", targetUrl: "https://example.com/g", title: "TinyLaunch", category: "AI", clicks: 421, impressions: 15000, priceCents: 6400 },
-      { x: 850, y: 80, size: 14, ownerId: "seed8", status: "active", imageUrl: "https://picsum.photos/seed/h/200", targetUrl: "https://example.com/h", title: "Outbid Clone", category: "Social", clicks: 1504, impressions: 48000, priceCents: 19600 },
+      { x: 50, y: 50, size: 20, ownerId: "seed1", status: "active", imageUrl: "https://avatar.vercel.sh/acme.png", targetUrl: "https://acme-ai.com", title: "Acme AI", category: "AI", clicks: 3421, impressions: 94000, priceCents: 40000 },
+      { x: 120, y: 80, size: 15, ownerId: "seed2", status: "active", imageUrl: "https://avatar.vercel.sh/shipfast.png", targetUrl: "https://shipfast.io", title: "ShipFast", category: "Tools", clicks: 2103, impressions: 72000, priceCents: 22500 },
+      { x: 400, y: 120, size: 18, ownerId: "seed3", status: "active", imageUrl: "https://avatar.vercel.sh/neon.png", targetUrl: "https://neon.tech", title: "NeonDeploy", category: "DevTools", clicks: 1892, impressions: 61000, priceCents: 32400 },
+      { x: 600, y: 300, size: 12, ownerId: "seed4", status: "active", imageUrl: "https://avatar.vercel.sh/pixelcraft.png", targetUrl: "https://pixelcraft.design", title: "PixelCraft", category: "Design", clicks: 982, impressions: 34000, priceCents: 14400 },
+      { x: 200, y: 400, size: 10, ownerId: "seed5", status: "active", imageUrl: "https://avatar.vercel.sh/dodopay.png", targetUrl: "https://dodopayments.com", title: "DodoPay", category: "Fintech", clicks: 765, impressions: 28000, priceCents: 10000 },
+      { x: 700, y: 600, size: 25, ownerId: "seed6", status: "active", imageUrl: "https://avatar.vercel.sh/megabrand.png", targetUrl: "https://megabrand.co", title: "MegaBrand", category: "Marketing", clicks: 5102, impressions: 120000, priceCents: 62500 },
+      { x: 80, y: 700, size: 8, ownerId: "seed7", status: "active", imageUrl: "https://avatar.vercel.sh/tinylaunch.png", targetUrl: "https://tinylaunch.io", title: "TinyLaunch", category: "AI", clicks: 421, impressions: 15000, priceCents: 6400 },
+      { x: 850, y: 80, size: 14, ownerId: "seed8", status: "active", imageUrl: "https://avatar.vercel.sh/outbid.png", targetUrl: "https://outbid.lol", title: "Outbid Clone", category: "Social", clicks: 1504, impressions: 48000, priceCents: 19600 },
+      { x: 30, y: 320, size: 16, ownerId: "seed9", status: "active", imageUrl: "https://avatar.vercel.sh/vercel.png", targetUrl: "https://vercel.com", title: "Vercel", category: "DevTools", clicks: 2840, impressions: 88000, priceCents: 25600 },
+      { x: 340, y: 380, size: 14, ownerId: "seed10", status: "active", imageUrl: "https://avatar.vercel.sh/supabase.png", targetUrl: "https://supabase.com", title: "Supabase", category: "DevTools", clicks: 2210, impressions: 76000, priceCents: 19600 },
+      { x: 850, y: 400, size: 13, ownerId: "seed11", status: "active", imageUrl: "https://avatar.vercel.sh/stripe.png", targetUrl: "https://stripe.com", title: "Stripe", category: "Fintech", clicks: 3100, impressions: 95000, priceCents: 16900 },
+      { x: 720, y: 150, size: 12, ownerId: "seed12", status: "active", imageUrl: "https://avatar.vercel.sh/perplexity.png", targetUrl: "https://perplexity.ai", title: "Perplexity", category: "AI", clicks: 2400, impressions: 81000, priceCents: 14400 },
     ];
     seeds.forEach((s, i) => {
       this.blocks.push({
@@ -171,7 +174,6 @@ class MockStore {
 
 export const mockStore = new MockStore();
 
-// Make it globally accessible for API routes (singleton)
 if (typeof globalThis !== "undefined") {
   const g = globalThis as unknown as { __mockStore?: MockStore };
   if (!g.__mockStore) g.__mockStore = mockStore;

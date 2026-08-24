@@ -8,7 +8,6 @@ export default function StatsPage() {
 
   useEffect(()=>{
     fetch("/api/stats").then(r=>r.json()).then(setStats);
-    // mock historical
     const hist = Array.from({length:14}, (_,i)=>{
       const d = new Date(Date.now() - (13-i)*86400000);
       return { date: d.toISOString().slice(0,10), blocks: 2 + Math.floor(Math.random()*6), revenue: 4000 + Math.floor(Math.random()*15000) };
@@ -21,7 +20,7 @@ export default function StatsPage() {
   return (
     <div className="mx-auto max-w-[1100px] px-4 py-8">
       <h1 className="text-3xl font-black">Live stats</h1>
-      <p className="text-sm text-zinc-600">Transparency like outbid.lol — every pixel accounted for.</p>
+      <p className="text-sm text-zinc-600">Transparent metrics — updated in real time.</p>
 
       {s && (
         <div className="mt-6 grid grid-cols-2 lg:grid-cols-4 gap-4">

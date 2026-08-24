@@ -54,16 +54,15 @@ export default function HomePage() {
   return (
     <div>
       <StatsBar />
-      {/* hero */}
       <div className="mx-auto max-w-[1400px] px-4 py-6">
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
           <div>
             <h1 className="text-4xl sm:text-5xl font-black tracking-tight leading-none">Rent pixels.<br /><span className="text-[#ff3b30]">Own the canvas.</span></h1>
-            <p className="mt-3 text-zinc-600 max-w-xl">A live 1000×1000 canvas. Pick any empty square — price is <b>size² × $1</b> (a 10×10 = 100 pixels = $100). 30-day lease, clicks tracked, biggest squares top the leaderboard. Inspired by Million Dollar Homepage + outbid.lol, rebuilt for real ownership.</p>
+            <p className="mt-3 text-zinc-600 max-w-xl">A live 1000×1000 canvas. Pick any empty square — price is <b>size² × $1</b> (a 10×10 = 100 pixels = $100). 30-day lease, clicks tracked, biggest squares top the leaderboard. Built for real ownership.</p>
             <div className="mt-4 flex flex-wrap gap-2 text-xs">
-              <span className="inline-flex items-center gap-1.5 bg-white border border-zinc-200 rounded-full px-3 py-1.5"><span className="w-2 h-2 bg-emerald-500 rounded-full" /> No overlap — DB exclusion constraint</span>
-              <span className="inline-flex items-center gap-1.5 bg-white border border-zinc-200 rounded-full px-3 py-1.5">⚡ Dodo Payments (MoR, global tax)</span>
-              <span className="inline-flex items-center gap-1.5 bg-white border border-zinc-200 rounded-full px-3 py-1.5">🛡️ Moderated before going live</span>
+              <span className="inline-flex items-center gap-1.5 bg-white border border-zinc-200 rounded-full px-3 py-1.5"><span className="w-2 h-2 bg-emerald-500 rounded-full" /> No overlap — DB exclusion</span>
+              <span className="inline-flex items-center gap-1.5 bg-white border border-zinc-200 rounded-full px-3 py-1.5">⚡ Dodo Payments (global tax)</span>
+              <span className="inline-flex items-center gap-1.5 bg-white border border-zinc-200 rounded-full px-3 py-1.5">🛡️ Reviewed before going live</span>
             </div>
           </div>
           <div className="flex flex-col gap-3 min-w-[280px]">
@@ -72,7 +71,7 @@ export default function HomePage() {
               <div className="mt-1 font-mono text-sm leading-relaxed">
                 1×1 = $1 · 2×2 = $4 · 5×5 = $25<br />10×10 = $100 · 20×20 = $400 · 50×50 = $2,500
               </div>
-              <div className="mt-3 text-xs opacity-70">Lease: 30 days, renewable. 10-min reservation lock at checkout.</div>
+              <div className="mt-3 text-xs opacity-70">Lease: 30 days, renewable. 10-minute lock at checkout.</div>
             </div>
             <div className="flex gap-2">
               <Link href="/rules" className="flex-1 text-center border border-zinc-200 bg-white rounded-full px-4 py-2 text-sm font-bold hover:bg-zinc-50">How it works</Link>
@@ -82,7 +81,6 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* canvas + sidebar */}
       <div id="canvas" className="mx-auto max-w-[1400px] px-4 grid lg:grid-cols-[1fr_360px] gap-6">
         <div className="min-w-0">
           <div className="flex items-center gap-2 mb-3 text-xs">
@@ -93,7 +91,7 @@ export default function HomePage() {
             ))}
           </div>
           {!data ? (
-            <div className="aspect-[1.35] bg-white border border-zinc-200 rounded-2xl grid place-items-center text-zinc-500">Loading canvas…</div>
+            <div className="aspect-square sm:aspect-[1.15] bg-white border border-zinc-200 rounded-2xl grid place-items-center text-zinc-500">Loading canvas…</div>
           ) : (
             <PixelCanvas blocks={filteredBlocks as unknown as CanvasBlock[]} config={data.config} onSelect={handleSelect} />
           )}
@@ -102,7 +100,7 @@ export default function HomePage() {
               <div className="flex-1 min-w-[200px]">
                 <div className="text-xs uppercase tracking-widest text-zinc-500">Your selection</div>
                 <div className="font-mono font-bold">{selection.x}, {selection.y} · {selection.size}×{selection.size} · {selection.size*selection.size} pixels</div>
-                <div className="text-sm">Total: <b>{formatCents(selection.priceCents)}</b> for 30 days · Lease auto-renews if you want</div>
+                <div className="text-sm">Total: <b>{formatCents(selection.priceCents)}</b> for 30 days</div>
               </div>
               <div className="flex gap-2">
                 <button onClick={()=>setSelection(null)} className="px-4 py-2 rounded-full border border-zinc-200 bg-white font-bold hover:bg-zinc-50">Cancel</button>
@@ -129,19 +127,18 @@ export default function HomePage() {
           </div>
           <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-sm">
             <div className="font-bold">Why biggest wins?</div>
-            <p className="mt-1 text-zinc-700">The leaderboard ranks by <b>size</b> (then price). A 20×20 ($400) outranks ten 5×5s ($25 each). It creates a visible incentive to go big — and makes the canvas visually impressive, not just a list.</p>
+            <p className="mt-1 text-zinc-700">The leaderboard ranks by <b>size</b> (then price). A 25×25 ($625) outranks ten 5×5s ($25 each). Big squares are instantly visible on the canvas.</p>
           </div>
         </div>
       </div>
 
-      {/* SEO blocks preview */}
       <div className="mx-auto max-w-[1400px] px-4 mt-12">
         <h2 className="font-black text-xl">Featured blocks</h2>
         <div className="mt-4 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {blocks.filter(b=>b.status==="active").slice(0,8).map(b=> (
             <Link key={b.id} href={`/block/${b.id}`} className="bg-white border border-zinc-200 rounded-2xl overflow-hidden hover:shadow-md transition">
               <div className="aspect-[1.6] bg-zinc-100 overflow-hidden">
-                <img src={b.imageUrl || `https://picsum.photos/seed/${b.id}/400`} alt={b.title || ""} className="w-full h-full object-cover" />
+                <img src={b.imageUrl || `https://avatar.vercel.sh/${encodeURIComponent(b.title || b.id)}.png`} alt={b.title || ""} className="w-full h-full object-cover" />
               </div>
               <div className="p-3">
                 <div className="font-bold text-sm truncate">{b.title}</div>

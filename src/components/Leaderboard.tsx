@@ -27,7 +27,7 @@ export default function Leaderboard({ rows }: { rows: LeaderRow[] }) {
         {rows.map((r, idx) => (
           <Link key={r.id} href={`/block/${r.id}`} className="flex items-center gap-3 px-4 py-3 hover:bg-zinc-50">
             <span className={`w-7 h-7 grid place-items-center rounded-full text-xs font-black ${idx===0 ? "bg-amber-400" : idx===1 ? "bg-zinc-300" : idx===2 ? "bg-amber-700 text-white" : "bg-zinc-100 text-zinc-600"}`}>{idx+1}</span>
-            <img src={r.imageUrl || `https://picsum.photos/seed/${r.id}/80`} alt="" className="w-10 h-10 rounded-lg object-cover border border-zinc-200" />
+            <img src={r.imageUrl || `https://avatar.vercel.sh/${encodeURIComponent(r.title || r.id)}.png`} alt="" className="w-10 h-10 rounded-lg object-cover border border-zinc-200 bg-white" />
             <div className="min-w-0 flex-1">
               <div className="text-sm font-bold truncate flex items-center gap-2">
                 {r.title || "Untitled"}

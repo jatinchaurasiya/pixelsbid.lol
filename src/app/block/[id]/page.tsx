@@ -17,7 +17,6 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
 export default async function BlockPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  // Try DB first, then mock
   let b: (typeof mockStore.blocks)[number] | null = mockStore.blocks.find(x=>x.id===id) || null;
   if (!b) {
     const db = getDb();
@@ -29,6 +28,36 @@ export default async function BlockPage({ params }: { params: Promise<{ id: stri
         if (found) b = found as typeof b;
       } catch {}
     }
+  }
+  if (!b) {
+    // Try raw SQL for neon
+    try {
+      const { neon } = await import("@neondatabase/serverless");
+      const sql = neon(process.env.DATABASE_URL!);
+      const rows = await sql`SELECT * FROM pixel_blocks WHERE id=${id} LIMIT 1`;
+      if (rows.length) {
+        const r = rows[0] as Record<string, unknown>;
+        b = {
+          id: r.id as string,
+          x: r.x as number,
+          y: r.y as number,
+          size: r.size as number,
+          ownerId: r.owner_id as string | null,
+          status: r.status as string,
+          imageUrl: r.image_url as string | null,
+          targetUrl: r.target_url as string | null,
+          title: r.title as string | null,
+          category: r.category as string | null,
+          clicks: r.clicks as number,
+          impressions: r.impressions as number,
+          priceCents: r.price_cents as number,
+          reservedAt: (r.reserved_at as string) || null,
+          reservationExpiresAt: (r.reservation_expires_at as string) || null,
+          rentedAt: (r.rented_at as string) || null,
+          expiresAt: (r.expires_at as string) || null,
+        } as unknown as typeof b;
+      }
+    } catch {}
   }
   if (!b) return notFound();
 
@@ -43,18 +72,18 @@ export default async function BlockPage({ params }: { params: Promise<{ id: stri
             {b.imageUrl ? (
               <img src={b.imageUrl} alt={b.title || ""} className="w-full h-full object-cover" />
             ) : (
-              <div className="text-zinc-400 text-sm">Pending moderation — placeholder</div>
+              <div className="text-zinc-400 text-sm">Under review — your ad will appear shortly after approval</div>
             )}
           </div>
           <div className="p-4 flex items-center justify-between text-xs">
             <span className="bg-zinc-900 text-white px-2 py-1 rounded-full font-bold">{b.size}×{b.size} · {b.size*b.size} pixels</span>
-            <span className={`px-2 py-1 rounded-full font-bold border ${b.status==="active" ? "bg-emerald-50 border-emerald-200 text-emerald-700" : b.status==="pending_review" ? "bg-amber-50 border-amber-200 text-amber-700" : "bg-zinc-100 border-zinc-200"}`}>{b.status}</span>
+            <span className={`px-2 py-1 rounded-full font-bold border ${b.status==="active" ? "bg-emerald-50 border-emerald-200 text-emerald-700" : b.status==="pending_review" ? "bg-amber-50 border-amber-200 text-amber-700" : "bg-zinc-100 border-zinc-200"}`}>{b.status === "pending_review" ? "under review" : b.status}</span>
           </div>
         </div>
 
         <div>
           <h1 className="text-3xl font-black tracking-tight">{b.title || "Untitled block"}</h1>
-          <div className="mt-2 text-sm text-zinc-600 break-all">{b.targetUrl || "No link yet"}</div>
+          <div className="mt-2 text-sm text-zinc-600 break-all">{b.targetUrl || "Link will appear after approval"}</div>
 
           <div className="mt-4 flex flex-wrap gap-2 text-sm">
             <span className="bg-white border border-zinc-200 rounded-full px-3 py-1.5">📍 {b.x}, {b.y}</span>
@@ -70,7 +99,7 @@ export default async function BlockPage({ params }: { params: Promise<{ id: stri
             <div className="font-bold">About this block</div>
             <p className="text-zinc-600 mt-1">
               This {b.size}×{b.size} square occupies {b.size*b.size} pixel-units on the 1000×1000 PixelsBid canvas.
-              It was rented for 30 days and is tracked for clicks and impressions — just like outbid.lol&apos;s bid leaderboard, but with <b>spatial ownership</b> you can actually see.
+              It was rented for 30 days and is tracked for clicks and impressions — spatial ownership you can see and click.
             </p>
             <div className="mt-3 text-xs text-zinc-500">Block ID: {b.id} · Rented: {b.rentedAt ? new Date(b.rentedAt).toLocaleDateString() : "—"} · Expires: {b.expiresAt ? new Date(b.expiresAt).toLocaleDateString() : "—"} · Category: {(b as unknown as { category: string }).category || "—"}</div>
           </div>
