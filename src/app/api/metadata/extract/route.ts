@@ -1,7 +1,14 @@
 import { NextResponse } from "next/server";
+import { isSafePublicUrl, checkRateLimit } from "@/lib/security";
 
 export async function POST(req: Request) {
   try {
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "anon";
+    const rate = checkRateLimit(`metadata_${ip}`, 40, 60 * 1000);
+    if (!rate.allowed) {
+      return NextResponse.json({ error: "Rate limit exceeded. Please try again later." }, { status: 429 });
+    }
+
     const body = await req.json();
     const { url } = body as { url?: string };
 
@@ -13,7 +20,7 @@ export async function POST(req: Request) {
 
     // Handle @twitter / @x handle
     if (targetUrl.startsWith("@")) {
-      const handle = targetUrl.replace(/^@/, "");
+      const handle = targetUrl.replace(/^@/, "").replace(/[^a-zA-Z0-9_]/g, "");
       targetUrl = `https://x.com/${handle}`;
       return NextResponse.json({
         success: true,
@@ -26,18 +33,17 @@ export async function POST(req: Request) {
       });
     }
 
-    // Handle Github repo / user: github.com/user/repo
     if (!targetUrl.startsWith("http://") && !targetUrl.startsWith("https://")) {
       targetUrl = `https://${targetUrl}`;
     }
 
-    let parsedUrl: URL;
-    try {
-      parsedUrl = new URL(targetUrl);
-    } catch {
-      return NextResponse.json({ error: "Invalid URL format" }, { status: 400 });
+    // SSRF & Protocol Smuggling Check
+    const safeCheck = isSafePublicUrl(targetUrl);
+    if (!safeCheck.safe || !safeCheck.url) {
+      return NextResponse.json({ error: safeCheck.reason || "Invalid destination URL" }, { status: 400 });
     }
 
+    const parsedUrl = safeCheck.url;
     const domain = parsedUrl.hostname.replace(/^www\./, "");
     const fallbackFavicon = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=128`;
     let fallbackTitle = domain
@@ -48,14 +54,14 @@ export async function POST(req: Request) {
 
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 4000);
+      const timeoutId = setTimeout(() => controller.abort(), 3500);
 
-      const res = await fetch(targetUrl, {
+      const res = await fetch(parsedUrl.href, {
         signal: controller.signal,
         headers: {
           "User-Agent":
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 PixelsBidBot/1.0",
-          Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+          Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
           "Accept-Language": "en-US,en;q=0.9",
         },
         redirect: "follow",
@@ -66,7 +72,24 @@ export async function POST(req: Request) {
         throw new Error(`Status ${res.status}`);
       }
 
-      const html = await res.text();
+      // Memory DoS Protection: Read at most 256KB of HTML
+      const reader = res.body?.getReader();
+      let html = "";
+      if (reader) {
+        let bytesRead = 0;
+        const decoder = new TextDecoder();
+        while (bytesRead < 256 * 1024) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          if (value) {
+            bytesRead += value.length;
+            html += decoder.decode(value, { stream: true });
+          }
+        }
+        reader.cancel().catch(() => {});
+      } else {
+        html = (await res.text()).slice(0, 256 * 1024);
+      }
 
       // 1. Extract Title
       let title = "";

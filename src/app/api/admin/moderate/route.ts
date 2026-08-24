@@ -1,15 +1,20 @@
 import { NextResponse } from "next/server";
 import { mockStore } from "@/lib/mock-store";
 import { getDb } from "@/db";
+import { secureTimingCompare } from "@/lib/security";
 
 function isAuthorized(req: Request): boolean {
   const adminSecret = process.env.ADMIN_SECRET;
-  if (!adminSecret) return true; // dev/open preview mode
-  const authHeader = req.headers.get("authorization") || req.headers.get("x-admin-secret");
-  if (authHeader === `Bearer ${adminSecret}` || authHeader === adminSecret) {
-    return true;
+  if (!adminSecret) {
+    if (process.env.NODE_ENV === "production") {
+      console.error("[admin/moderate] ADMIN_SECRET not set in production — rejecting");
+      return false;
+    }
+    return true; // dev mode only
   }
-  return false;
+  const rawAuth = req.headers.get("authorization") || req.headers.get("x-admin-secret") || "";
+  const token = rawAuth.startsWith("Bearer ") ? rawAuth.slice(7).trim() : rawAuth.trim();
+  return secureTimingCompare(token, adminSecret);
 }
 
 export async function POST(req: Request) {

@@ -1,13 +1,20 @@
 import { NextResponse } from "next/server";
 import { mockStore } from "@/lib/mock-store";
 import { getDb } from "@/db";
+import { secureTimingCompare } from "@/lib/security";
 
 function isCronAuthorized(req: Request): boolean {
   const secret = process.env.CRON_SECRET;
-  if (!secret) return true; // dev mode
-  const auth = req.headers.get("authorization");
-  if (auth === `Bearer ${secret}` || auth === secret) return true;
-  return false;
+  if (!secret) {
+    if (process.env.NODE_ENV === "production") {
+      console.error("[cron/sweep] CRON_SECRET not set in production — rejecting");
+      return false;
+    }
+    return true; // dev mode only
+  }
+  const auth = req.headers.get("authorization") || "";
+  const token = auth.startsWith("Bearer ") ? auth.slice(7).trim() : auth.trim();
+  return secureTimingCompare(token, secret);
 }
 
 export async function GET(req: Request) {

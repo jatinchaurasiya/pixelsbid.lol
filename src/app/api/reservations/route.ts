@@ -1,9 +1,16 @@
 import { NextResponse } from "next/server";
 import { mockStore, defaultConfig } from "@/lib/mock-store";
 import { getDb } from "@/db";
+import { sanitizeText, isSafePublicUrl, checkRateLimit } from "@/lib/security";
 
 export async function POST(req: Request) {
   try {
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "anon";
+    const rate = checkRateLimit(`res_${ip}`, 30, 60 * 1000);
+    if (!rate.allowed) {
+      return NextResponse.json({ error: "Reservation rate limit exceeded. Please wait a moment." }, { status: 429 });
+    }
+
     const body = await req.json();
     const {
       x,
@@ -30,13 +37,23 @@ export async function POST(req: Request) {
     }
 
     const cfg = defaultConfig;
-    if (size < cfg.minSize || size > cfg.maxSize) {
-      return NextResponse.json({ error: `Size must be between ${cfg.minSize} and ${cfg.maxSize} pixels (multiples of 10)` }, { status: 400 });
+    if (size < cfg.minSize || size > cfg.maxSize || size % 10 !== 0) {
+      return NextResponse.json({ error: `Size must be a multiple of 10 between ${cfg.minSize} and ${cfg.maxSize} pixels` }, { status: 400 });
     }
 
-    if (x < 0 || y < 0 || x + size > cfg.width || y + size > cfg.height) {
-      return NextResponse.json({ error: "Selection is out of canvas bounds" }, { status: 400 });
+    if (x < 0 || y < 0 || x + size > cfg.width || y + size > cfg.height || x % 10 !== 0 || y % 10 !== 0) {
+      return NextResponse.json({ error: "Selection coordinates must align to 10px grid and stay within canvas bounds" }, { status: 400 });
     }
+
+    // Sanitize user-provided fields
+    const cleanTitle = title ? sanitizeText(title, 100) : null;
+    let cleanTarget: string | null = null;
+    if (targetUrl) {
+      const check = isSafePublicUrl(targetUrl);
+      cleanTarget = check.safe && check.url ? check.url.href : null;
+    }
+    const cleanImage = imageUrl ? (imageUrl.startsWith("data:image/") ? imageUrl.slice(0, 3 * 1024 * 1024) : sanitizeText(imageUrl, 2048)) : null;
+    const cleanCat = category ? sanitizeText(category, 50) : "AI";
 
     // $1.00 USD per 10x10 block unit (100 pixels = $1.00)
     const blockUnits = Math.max(1, Math.round((size / 10) * (size / 10)));
