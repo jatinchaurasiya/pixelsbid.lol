@@ -13,39 +13,104 @@ export default async function LeaderboardPage() {
     try {
       const { pixelBlocks } = await import("@/db/schema");
       const all = await db.select().from(pixelBlocks);
-      rows = (all.filter(r=>r.status==="active").sort((a,b)=> b.size - a.size || (b.priceCents||0)-(a.priceCents||0)).slice(0,50) as unknown as typeof rows);
+      rows = (all
+        .filter((r) => r.status === "active")
+        .sort((a, b) => b.size - a.size || (b.priceCents || 0) - (a.priceCents || 0))
+        .slice(0, 50) as unknown as typeof rows);
     } catch {}
   }
 
+  const top1 = rows[0];
+  const outbidTargetSize = top1 ? Math.min(100, top1.size + 10) : 10;
+  const outbidBlocks = Math.max(1, Math.round(Math.pow(outbidTargetSize / 10, 2)));
+  const outbidCostCents = outbidBlocks * 100; // $1.00 per 10x10 block
+
   return (
-    <div className="mx-auto max-w-[1100px] px-4 py-8 grid lg:grid-cols-[1fr_360px] gap-8">
+    <div className="mx-auto max-w-[1250px] px-4 py-8 grid lg:grid-cols-[1fr_380px] gap-8">
       <div>
-        <h1 className="text-3xl font-black">Biggest Pixels — Leaderboard</h1>
-        <p className="text-sm text-zinc-600 mt-2">Ranked by <b>square size</b> (size² = pixels owned). Ties broken by price, then earliest. This is the moat vs. pure bid ladders — your rank is visual real estate, not just a number.</p>
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl sm:text-4xl font-black tracking-tight">Leaderboard & Top Titans</h1>
+            <p className="text-sm text-zinc-600 mt-1 max-w-2xl leading-relaxed">
+              Real 1,000,000 pixel billboard real estate. Your leaderboard rank is determined directly by your physical square dimensions on{" "}
+              <b>pixelsbid.lol</b>.
+            </p>
+          </div>
+        </div>
+
         <div className="mt-6">
           <Leaderboard rows={rows as unknown as Parameters<typeof Leaderboard>[0]["rows"]} />
         </div>
       </div>
-      <div className="space-y-4">
-        <div className="bg-white border border-zinc-200 rounded-2xl p-5">
-          <h3 className="font-black">How pricing works</h3>
-          <div className="mt-2 font-mono text-sm bg-zinc-50 border border-zinc-200 rounded-xl p-3">
-            price = size × size × $1<br />
-            <span className="text-zinc-500">3×3 = 9 pixels = $9</span><br />
-            <span className="text-zinc-500">10×10 = 100 pixels = $100</span><br />
-            <span className="text-zinc-500">25×25 = 625 pixels = $625</span>
+
+      <div className="space-y-5">
+        {/* Outbid Action Card */}
+        <div className="bg-gradient-to-br from-zinc-900 to-zinc-950 text-white rounded-3xl p-6 shadow-md border border-zinc-800">
+          <div className="flex items-center justify-between">
+            <span className="text-xs uppercase tracking-widest text-amber-400 font-black">⚡ Outbid Battle</span>
+            <span className="bg-white/10 px-2 py-0.5 rounded-full text-[11px] font-mono">Live</span>
           </div>
-          <Link href="/" className="mt-4 inline-flex w-full justify-center bg-[#ff3b30] text-white rounded-full py-2.5 font-bold hover:bg-[#e5352c]">Rent your square</Link>
+
+          <div className="mt-4">
+            <div className="text-xs text-zinc-400">Current #1 Billboard Leader</div>
+            <div className="text-lg font-black text-white mt-0.5 truncate">
+              {top1?.title || "No Leader Yet"}
+            </div>
+            <div className="text-xs text-zinc-400 mt-1">
+              Holds <b className="text-white">{top1?.size || 0}×{top1?.size || 0}</b> ({top1 ? Math.round(top1.size * top1.size / 100) : 0} blocks) · Paid {top1 ? formatCents(top1.priceCents) : "$0"}
+            </div>
+          </div>
+
+          <div className="mt-5 p-3.5 bg-white/5 border border-white/10 rounded-2xl text-xs space-y-1.5">
+            <div className="flex justify-between text-zinc-300">
+              <span>Required Size to Overtake:</span>
+              <span className="font-bold text-white">{outbidTargetSize}×{outbidTargetSize}</span>
+            </div>
+            <div className="flex justify-between text-zinc-300">
+              <span>Block Units (10×10):</span>
+              <span className="font-bold text-white">{outbidBlocks} block{outbidBlocks > 1 ? "s" : ""}</span>
+            </div>
+            <div className="flex justify-between text-zinc-300">
+              <span>Outbid Price ($1/block):</span>
+              <span className="font-black text-amber-400 text-sm font-mono">{formatCents(outbidCostCents)}</span>
+            </div>
+          </div>
+
+          <Link
+            href="/#canvas-section"
+            className="mt-5 w-full inline-flex justify-center items-center gap-2 bg-[#ff3b30] text-white rounded-full py-3.5 font-black text-sm hover:bg-[#e5352c] transition shadow-sm"
+          >
+            <span>Claim #1 on Canvas →</span>
+          </Link>
         </div>
-        <div className="bg-zinc-900 text-white rounded-2xl p-5 text-sm">
-          <div className="font-bold">Today vs All-time</div>
-          <p className="opacity-80 mt-1">Inspired by outbid.lol&apos;s dual board: we show <b>All-time</b> by size, and you can filter <b>Today&apos;s mints</b> on <Link href="/stats" className="underline">/stats</Link>. Fresh buyers get a daily spotlight without needing to outbid whales.</p>
-        </div>
-        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-sm">
-          <div className="font-bold">Want #1?</div>
-          <div className="mt-1">Current leader is <b>{rows[0]?.size}×{rows[0]?.size}</b> ({rows[0]?.size ? rows[0].size*rows[0].size : 0} pixels — {rows[0] ? formatCents(rows[0].priceCents) : "$0"}). To take #1 you need size ≥ {(rows[0]?.size||0)+1}.</div>
+
+        {/* Pricing Algorithm Card */}
+        <div className="bg-white border border-zinc-200 rounded-3xl p-6 shadow-sm">
+          <h3 className="font-black text-base">Block Unit Pricing Formula</h3>
+          <p className="text-xs text-zinc-500 mt-1 leading-relaxed">
+            Every 10×10 pixel block (100 pixels) costs exactly <b>$1.00 USD</b> for a 30-day lease:
+          </p>
+
+          <div className="mt-3 font-mono text-xs bg-zinc-50 border border-zinc-200 rounded-2xl p-4 space-y-1 text-zinc-800">
+            <div className="font-black text-zinc-950">Price = (size / 10)² × $1.00</div>
+            <div className="text-zinc-500 pt-1">• 10×10 = 1 block = $1.00</div>
+            <div className="text-zinc-500">• 20×20 = 4 blocks = $4.00</div>
+            <div className="text-zinc-500">• 30×30 = 9 blocks = $9.00</div>
+            <div className="text-zinc-500">• 40×40 = 16 blocks = $16.00</div>
+            <div className="text-zinc-500">• 50×50 = 25 blocks = $25.00</div>
+            <div className="text-zinc-500">• 100×100 = 100 blocks = $100.00</div>
+          </div>
+
+          <Link
+            href="/#canvas-section"
+            className="mt-4 inline-flex w-full justify-center bg-zinc-900 text-white rounded-full py-3 text-xs font-bold hover:bg-black transition"
+          >
+            Select Any Empty Square
+          </Link>
         </div>
       </div>
     </div>
   );
 }
+
+

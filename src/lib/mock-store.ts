@@ -47,11 +47,11 @@ export interface CanvasConfig {
 export const defaultConfig: CanvasConfig = {
   width: 1000,
   height: 1000,
-  unitPriceCents: 100,
+  unitPriceCents: 100, // $1.00 per 10x10 block unit (100 pixels)
   pricingMode: "squared",
   leaseDays: 30,
-  minSize: 1,
-  maxSize: 50,
+  minSize: 10,
+  maxSize: 100,
 };
 
 function rectOverlap(a: MockBlock, b: MockBlock) {
@@ -66,49 +66,14 @@ function rectOverlap(a: MockBlock, b: MockBlock) {
 class MockStore {
   blocks: MockBlock[] = [];
   orders: MockOrder[] = [];
-  visitors = 12483;
+  visitors = 1420;
   constructor() {
-    const now = new Date();
-    const seeds: Array<Partial<MockBlock> & Pick<MockBlock, "x" | "y" | "size" | "status" | "priceCents">> = [
-      { x: 50, y: 50, size: 20, ownerId: "seed1", status: "active", imageUrl: "https://avatar.vercel.sh/acme.png", targetUrl: "https://acme-ai.com", title: "Acme AI", category: "AI", clicks: 3421, impressions: 94000, priceCents: 40000 },
-      { x: 120, y: 80, size: 15, ownerId: "seed2", status: "active", imageUrl: "https://avatar.vercel.sh/shipfast.png", targetUrl: "https://shipfast.io", title: "ShipFast", category: "Tools", clicks: 2103, impressions: 72000, priceCents: 22500 },
-      { x: 400, y: 120, size: 18, ownerId: "seed3", status: "active", imageUrl: "https://avatar.vercel.sh/neon.png", targetUrl: "https://neon.tech", title: "NeonDeploy", category: "DevTools", clicks: 1892, impressions: 61000, priceCents: 32400 },
-      { x: 600, y: 300, size: 12, ownerId: "seed4", status: "active", imageUrl: "https://avatar.vercel.sh/pixelcraft.png", targetUrl: "https://pixelcraft.design", title: "PixelCraft", category: "Design", clicks: 982, impressions: 34000, priceCents: 14400 },
-      { x: 200, y: 400, size: 10, ownerId: "seed5", status: "active", imageUrl: "https://avatar.vercel.sh/dodopay.png", targetUrl: "https://dodopayments.com", title: "DodoPay", category: "Fintech", clicks: 765, impressions: 28000, priceCents: 10000 },
-      { x: 700, y: 600, size: 25, ownerId: "seed6", status: "active", imageUrl: "https://avatar.vercel.sh/megabrand.png", targetUrl: "https://megabrand.co", title: "MegaBrand", category: "Marketing", clicks: 5102, impressions: 120000, priceCents: 62500 },
-      { x: 80, y: 700, size: 8, ownerId: "seed7", status: "active", imageUrl: "https://avatar.vercel.sh/tinylaunch.png", targetUrl: "https://tinylaunch.io", title: "TinyLaunch", category: "AI", clicks: 421, impressions: 15000, priceCents: 6400 },
-      { x: 850, y: 80, size: 14, ownerId: "seed8", status: "active", imageUrl: "https://avatar.vercel.sh/outbid.png", targetUrl: "https://outbid.lol", title: "Outbid Clone", category: "Social", clicks: 1504, impressions: 48000, priceCents: 19600 },
-      { x: 30, y: 320, size: 16, ownerId: "seed9", status: "active", imageUrl: "https://avatar.vercel.sh/vercel.png", targetUrl: "https://vercel.com", title: "Vercel", category: "DevTools", clicks: 2840, impressions: 88000, priceCents: 25600 },
-      { x: 340, y: 380, size: 14, ownerId: "seed10", status: "active", imageUrl: "https://avatar.vercel.sh/supabase.png", targetUrl: "https://supabase.com", title: "Supabase", category: "DevTools", clicks: 2210, impressions: 76000, priceCents: 19600 },
-      { x: 850, y: 400, size: 13, ownerId: "seed11", status: "active", imageUrl: "https://avatar.vercel.sh/stripe.png", targetUrl: "https://stripe.com", title: "Stripe", category: "Fintech", clicks: 3100, impressions: 95000, priceCents: 16900 },
-      { x: 720, y: 150, size: 12, ownerId: "seed12", status: "active", imageUrl: "https://avatar.vercel.sh/perplexity.png", targetUrl: "https://perplexity.ai", title: "Perplexity", category: "AI", clicks: 2400, impressions: 81000, priceCents: 14400 },
-    ];
-    seeds.forEach((s, i) => {
-      this.blocks.push({
-        id: `seed-${i}`,
-        x: s.x,
-        y: s.y,
-        size: s.size,
-        ownerId: s.ownerId!,
-        status: s.status as BlockStatus,
-        imageUrl: s.imageUrl!,
-        targetUrl: s.targetUrl!,
-        title: s.title!,
-        category: s.category!,
-        clicks: s.clicks ?? 0,
-        impressions: s.impressions ?? 0,
-        priceCents: s.priceCents ?? 0,
-        reservedAt: new Date(now.getTime() - 86400000 * (i + 1)).toISOString(),
-        reservationExpiresAt: null,
-        rentedAt: new Date(now.getTime() - 86400000 * (i + 1)).toISOString(),
-        expiresAt: new Date(now.getTime() + 86400000 * (30 - i)).toISOString(),
-      });
-    });
+    // Clean production state — blocks are added when users reserve and pay
   }
 
   priceFor(size: number, config = defaultConfig) {
-    if (config.pricingMode === "linear") return size * config.unitPriceCents;
-    return size * size * config.unitPriceCents;
+    const blocks = Math.max(1, Math.round((size / 10) * (size / 10)));
+    return blocks * config.unitPriceCents;
   }
 
   canPlace(x: number, y: number, size: number): boolean {

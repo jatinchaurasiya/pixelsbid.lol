@@ -1,7 +1,11 @@
-type CreateCheckoutParams = {
+import { DodoPayments } from "dodopayments";
+import { Webhook } from "standardwebhooks";
+
+export type CreateCheckoutParams = {
   amountCents: number;
   reservationId: string;
   userId: string;
+  name?: string;
   email?: string;
   successUrl: string;
   cancelUrl: string;
@@ -9,56 +13,98 @@ type CreateCheckoutParams = {
 
 export async function createDodoCheckout(params: CreateCheckoutParams) {
   const key = process.env.DODO_PAYMENTS_API_KEY;
-  const checkoutUrlBase = process.env.DODO_CHECKOUT_URL;
+  const env = (process.env.DODO_PAYMENTS_ENVIRONMENT || "live_mode") as "live_mode" | "test_mode";
+  const productId = process.env.DODO_PRODUCT_ID || "pdt_0Nm6BMf8XuGYwAUu6bioW";
 
-  if (!key || !checkoutUrlBase) {
-    // Production checkout — uses internal route that simulates Dodo then marks block active
-    // In production with Dodo keys this branch is never taken
+  if (!key) {
+    // Local dev preview without Dodo API keys — uses mock checkout simulator
     const mockId = `dodo_${params.reservationId}_${Date.now()}`;
     return {
-      checkoutUrl: `/api/mock-checkout?reservationId=${params.reservationId}&mockId=${mockId}`,
+      checkoutUrl: `/api/mock-checkout?reservationId=${encodeURIComponent(params.reservationId)}&mockId=${encodeURIComponent(mockId)}`,
       paymentId: mockId,
       isMock: true as const,
     };
   }
 
   try {
-    const res = await fetch("https://api.dodopayments.com/checkouts", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${key}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        amount: params.amountCents,
-        currency: "USD",
-        metadata: {
-          reservation_id: params.reservationId,
-          user_id: params.userId,
-        },
-        return_url: params.successUrl,
-        cancel_url: params.cancelUrl,
-        customer_email: params.email,
-      }),
+    const client = new DodoPayments({
+      bearerToken: key,
+      environment: env,
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message || "Dodo checkout failed");
+
+    const quantity = Math.max(1, Math.round(params.amountCents / 100));
+
+    const payment = await client.payments.create({
+      billing: {
+        country: "US",
+      },
+      customer: {
+        email: params.email || "advertiser@pixelsbid.lol",
+        name: params.name || "PixelsBid Advertiser",
+      },
+      payment_link: true,
+      product_cart: [
+        {
+          product_id: productId,
+          quantity,
+        },
+      ],
+      return_url: params.successUrl,
+      metadata: {
+        reservation_id: params.reservationId,
+        user_id: params.userId || "anon",
+      },
+    });
+
+    const checkoutUrl = payment.payment_link;
+    const paymentId = payment.payment_id;
+
+    if (!checkoutUrl) {
+      throw new Error("Dodo response did not contain a payment link URL");
+    }
+
     return {
-      checkoutUrl: data.checkout_url || data.url,
-      paymentId: data.id || data.payment_id,
+      checkoutUrl,
+      paymentId,
       isMock: false as const,
     };
   } catch (e) {
-    console.error("[Dodo] checkout error", e);
+    console.error("[Dodo] checkout creation error:", e);
     throw e;
   }
 }
 
-export function verifyDodoWebhook(payload: string, signature: string, secret: string): boolean {
-  if (!secret) return true;
+export function verifyDodoWebhookHeaders(
+  payload: string,
+  headers: Record<string, string | string[] | undefined>,
+  secret?: string
+): boolean {
+  const webhookSecret = secret || process.env.DODO_WEBHOOK_SECRET;
+  if (!webhookSecret) {
+    if (process.env.NODE_ENV === "production") {
+      console.error("[Dodo Webhook] DODO_WEBHOOK_SECRET is not configured in production!");
+      return false;
+    }
+    console.warn("[Dodo Webhook] DODO_WEBHOOK_SECRET missing; skipping verification in dev mode");
+    return true;
+  }
+
   try {
-    return !!signature;
-  } catch {
+    const wh = new Webhook(webhookSecret);
+    const normalizedHeaders: Record<string, string> = {};
+    for (const [k, v] of Object.entries(headers)) {
+      if (typeof v === "string") {
+        normalizedHeaders[k.toLowerCase()] = v;
+      } else if (Array.isArray(v) && v[0]) {
+        normalizedHeaders[k.toLowerCase()] = v[0];
+      }
+    }
+    wh.verify(payload, normalizedHeaders);
+    return true;
+  } catch (err) {
+    console.error("[Dodo Webhook] Cryptographic verification failed:", err instanceof Error ? err.message : err);
     return false;
   }
 }
+
+

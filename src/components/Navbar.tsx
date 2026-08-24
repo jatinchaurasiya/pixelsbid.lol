@@ -12,13 +12,22 @@ export default function Navbar() {
     <header className="sticky top-0 z-50 backdrop-blur-xl bg-white/80 border-b border-zinc-200">
       <div className="mx-auto max-w-[1400px] px-4 h-[56px] flex items-center justify-between gap-4">
         <div className="flex items-center gap-6">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-[#ff3b30] flex items-center justify-center text-white font-black text-sm">P$</div>
-            <span className="font-black tracking-tight text-[18px]">pixelsbid<span className="text-[#ff3b30]">.lol</span></span>
-            <span className="hidden sm:inline-flex ml-2 text-[10px] leading-none bg-zinc-900 text-white px-1.5 py-1 rounded font-bold">BETA</span>
+          <Link href="/" className="flex items-center gap-2.5 group">
+            <img
+              src="/logo.png"
+              alt="PixelsBid"
+              className="w-8 h-8 rounded-lg object-contain group-hover:scale-105 transition shrink-0"
+            />
+            <span className="font-black tracking-tight text-[19px]">
+              pixelsbid<span className="text-[#ff3b30]">.lol</span>
+            </span>
           </Link>
           <nav className="hidden md:flex items-center gap-1 text-sm font-medium">
             <Link href="/" className="px-3 py-1.5 rounded-full hover:bg-zinc-100">Canvas</Link>
+            <Link href="/today" className="px-3 py-1.5 rounded-full bg-red-50 text-red-600 font-bold hover:bg-red-100 flex items-center gap-1">
+              <span>Today</span>
+              <span className="text-xs">🔥</span>
+            </Link>
             <Link href="/leaderboard" className="px-3 py-1.5 rounded-full hover:bg-zinc-100">Leaderboard</Link>
             <Link href="/stats" className="px-3 py-1.5 rounded-full hover:bg-zinc-100">Stats</Link>
             <Link href="/rules" className="px-3 py-1.5 rounded-full hover:bg-zinc-100">Rules</Link>
@@ -27,7 +36,7 @@ export default function Navbar() {
         </div>
 
         <div className="flex items-center gap-2">
-          <Link href="/#canvas" className="hidden sm:inline-flex bg-[#ff3b30] hover:bg-[#e5352c] text-white text-sm font-bold px-4 py-2 rounded-full">Rent pixels</Link>
+          <Link href="/#canvas-section" className="hidden sm:inline-flex bg-[#ff3b30] hover:bg-[#e5352c] text-white text-sm font-bold px-4 py-2 rounded-full shadow-xs">Claim pixels</Link>
           {!isPending && (
             user ? (
               <div className="flex items-center gap-2">
@@ -49,6 +58,7 @@ export default function Navbar() {
       {mobile && (
         <div className="md:hidden border-t border-zinc-200 bg-white px-4 py-3 flex flex-col gap-2 text-sm font-medium">
           <Link href="/" onClick={() => setMobile(false)}>Canvas</Link>
+          <Link href="/today" onClick={() => setMobile(false)} className="text-red-600 font-bold">Today 🔥</Link>
           <Link href="/leaderboard" onClick={() => setMobile(false)}>Leaderboard</Link>
           <Link href="/stats" onClick={() => setMobile(false)}>Stats</Link>
           <Link href="/rules" onClick={() => setMobile(false)}>Rules</Link>

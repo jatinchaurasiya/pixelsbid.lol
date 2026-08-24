@@ -38,7 +38,7 @@ export default function StatsBar() {
       <span><b>{stats.totalBlocks}</b> blocks rented</span>
       <span><b>{stats.pct}%</b> canvas filled</span>
       <span className="font-bold text-[#ff3b30]">{formatCents(stats.revenueCents)} raised</span>
-      <span className="hidden sm:inline opacity-60">· 1000×1000 pixels · $1 / pixel</span>
+      <span className="hidden sm:inline opacity-60">· 1000×1000 pixels · $1 / 10×10 block</span>
     </div>
   );
 }

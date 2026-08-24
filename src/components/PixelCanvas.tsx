@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
+import { formatCents } from "@/lib/utils";
 
 export type CanvasBlock = {
   id: string;
@@ -15,46 +16,104 @@ export type CanvasBlock = {
   priceCents: number;
 };
 
+type SelectionState = {
+  x: number;
+  y: number;
+  size: number;
+  priceCents: number;
+};
+
 type Props = {
   blocks: CanvasBlock[];
   config: { width: number; height: number };
-  onSelect: (sel: { x: number; y: number; size: number; priceCents: number }) => void;
+  selection: SelectionState | null;
+  onSelect: (sel: SelectionState | null) => void;
+  previewTitle?: string;
+  previewImageUrl?: string;
 };
 
-export default function PixelCanvas({ blocks, config, onSelect }: Props) {
+export default function PixelCanvas({
+  blocks,
+  config,
+  selection,
+  onSelect,
+  previewTitle,
+  previewImageUrl,
+}: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0.95);
-  const [pan, setPan] = useState({ x: 12, y: 12 });
-  const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
-  const [dragEnd, setDragEnd] = useState<{ x: number; y: number } | null>(null);
+  const [pan, setPan] = useState({ x: 16, y: 16 });
   const [isPanning, setIsPanning] = useState(false);
+  const [isDraggingSelection, setIsDraggingSelection] = useState(false);
   const [lastPanPoint, setLastPanPoint] = useState<{ x: number; y: number } | null>(null);
-  const [hover, setHover] = useState<CanvasBlock | null>(null);
-  const [selectedSize] = useState(5);
+  const [hoverBlock, setHoverBlock] = useState<CanvasBlock | null>(null);
+  const [hoverGridPos, setHoverGridPos] = useState<{ x: number; y: number } | null>(null);
   const [tick, setTick] = useState(0);
 
   const imgCache = useRef<Map<string, HTMLImageElement>>(new Map());
+  const previewImgRef = useRef<HTMLImageElement | null>(null);
 
-  const getBlockAt = useCallback((px: number, py: number) => {
-    return blocks.find(b => px >= b.x && px < b.x + b.size && py >= b.y && py < b.y + b.size) || null;
-  }, [blocks]);
-
-  const priceFor = (s: number) => s * s * 100;
-
-  const hasOverlap = useCallback((x: number, y: number, size: number) => {
-    for (const b of blocks) {
-      if (["reserved", "pending_review", "active"].includes(b.status)) {
-        const overlap = !(x + size <= b.x || b.x + b.size <= x || y + size <= b.y || b.y + b.size <= y);
-        if (overlap) return true;
-      }
+  // Keep preview image updated
+  useEffect(() => {
+    if (!previewImageUrl) {
+      previewImgRef.current = null;
+      return;
     }
-    if (x < 0 || y < 0 || x + size > config.width || y + size > config.height) return true;
-    return false;
-  }, [blocks, config]);
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      previewImgRef.current = img;
+      setTick((t) => t + 1);
+    };
+    img.onerror = () => {
+      previewImgRef.current = null;
+    };
+    img.src = previewImageUrl;
+  }, [previewImageUrl]);
+
+  const priceFor = (s: number) => {
+    const units = Math.max(1, Math.round((s / 10) * (s / 10)));
+    return units * 100;
+  };
+
+  const hasOverlap = useCallback(
+    (x: number, y: number, size: number) => {
+      for (const b of blocks) {
+        if (["reserved", "pending_review", "active"].includes(b.status)) {
+          const overlap = !(
+            x + size <= b.x ||
+            b.x + b.size <= x ||
+            y + size <= b.y ||
+            b.y + b.size <= y
+          );
+          if (overlap) return true;
+        }
+      }
+      if (x < 0 || y < 0 || x + size > config.width || y + size > config.height) return true;
+      return false;
+    },
+    [blocks, config]
+  );
+
+  const getBlockAt = useCallback(
+    (px: number, py: number) => {
+      return (
+        blocks.find(
+          (b) =>
+            px >= b.x &&
+            px < b.x + b.size &&
+            py >= b.y &&
+            py < b.y + b.size
+        ) || null
+      );
+    },
+    [blocks]
+  );
 
   const canvasToWorld = (clientX: number, clientY: number) => {
-    const rect = canvasRef.current!.getBoundingClientRect();
+    if (!canvasRef.current) return { x: 0, y: 0 };
+    const rect = canvasRef.current.getBoundingClientRect();
     const cx = clientX - rect.left;
     const cy = clientY - rect.top;
     return {
@@ -63,18 +122,20 @@ export default function PixelCanvas({ blocks, config, onSelect }: Props) {
     };
   };
 
-  // Auto-fit on mount and when container resizes
+  // Auto-fit on mount
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
     const fit = () => {
       const w = el.clientWidth;
       const h = el.clientHeight;
-      // fit 1000x1000 into container with padding
       const s = Math.min(w / (config.width + 40), h / (config.height + 40));
       const target = Math.max(0.6, Math.min(1.4, s * 0.98));
       setScale(target);
-      setPan({ x: (w - config.width * target) / 2, y: (h - config.height * target) / 2 });
+      setPan({
+        x: (w - config.width * target) / 2,
+        y: (h - config.height * target) / 2,
+      });
     };
     fit();
     const ro = new ResizeObserver(fit);
@@ -82,7 +143,7 @@ export default function PixelCanvas({ blocks, config, onSelect }: Props) {
     return () => ro.disconnect();
   }, [config.width, config.height]);
 
-  // Render loop — re-runs on blocks, pan, scale, drag, and tick (image loads)
+  // Main Canvas Render
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -95,39 +156,68 @@ export default function PixelCanvas({ blocks, config, onSelect }: Props) {
     canvas.height = rect.height * dpr;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    ctx.fillStyle = "#fafafa";
+    // Canvas Container Background
+    ctx.fillStyle = "#f4f4f5";
     ctx.fillRect(0, 0, rect.width, rect.height);
 
     ctx.save();
     ctx.translate(pan.x, pan.y);
     ctx.scale(scale, scale);
 
-    // canvas background + subtle inner shadow
+    // 1000x1000 Canvas Board Background
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, config.width, config.height);
-    ctx.fillStyle = "rgba(0,0,0,0.02)";
-    ctx.fillRect(0, 0, config.width, config.height);
 
-    // grid every 50px — more visible for production
-    ctx.strokeStyle = "#f0f0f0";
+    // 10px Grid Lines (10x10 block units)
+    ctx.strokeStyle = "#f4f4f5";
+    ctx.lineWidth = 0.6 / scale;
+    for (let x = 0; x <= config.width; x += 10) {
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, config.height);
+      ctx.stroke();
+    }
+    for (let y = 0; y <= config.height; y += 10) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(config.width, y);
+      ctx.stroke();
+    }
+
+    // 50px Major Grid Lines
+    ctx.strokeStyle = "#e4e4e7";
     ctx.lineWidth = 1 / scale;
     for (let x = 0; x <= config.width; x += 50) {
-      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, config.height); ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, config.height);
+      ctx.stroke();
     }
     for (let y = 0; y <= config.height; y += 50) {
-      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(config.width, y); ctx.stroke();
-    }
-    // stronger every 100px
-    ctx.strokeStyle = "#e8e8e8";
-    ctx.lineWidth = 1.2 / scale;
-    for (let x = 0; x <= config.width; x += 100) {
-      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, config.height); ctx.stroke();
-    }
-    for (let y = 0; y <= config.height; y += 100) {
-      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(config.width, y); ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(config.width, y);
+      ctx.stroke();
     }
 
+    // 100px Canvas Grid Marks
     ctx.strokeStyle = "#d4d4d8";
+    ctx.lineWidth = 1.4 / scale;
+    for (let x = 0; x <= config.width; x += 100) {
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, config.height);
+      ctx.stroke();
+    }
+    for (let y = 0; y <= config.height; y += 100) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(config.width, y);
+      ctx.stroke();
+    }
+
+    // Outer Border
+    ctx.strokeStyle = "#18181b";
     ctx.lineWidth = 2.5 / scale;
     ctx.strokeRect(0, 0, config.width, config.height);
 
@@ -136,8 +226,15 @@ export default function PixelCanvas({ blocks, config, onSelect }: Props) {
     const viewRight = viewLeft + rect.width / scale;
     const viewBottom = viewTop + rect.height / scale;
 
+    // Render Blocks
     for (const b of blocks) {
-      if (b.x + b.size < viewLeft || b.x > viewRight || b.y + b.size < viewTop || b.y > viewBottom) continue;
+      if (
+        b.x + b.size < viewLeft ||
+        b.x > viewRight ||
+        b.y + b.size < viewTop ||
+        b.y > viewBottom
+      )
+        continue;
 
       if (b.status === "active" || b.status === "pending_review") {
         const key = b.id;
@@ -145,87 +242,136 @@ export default function PixelCanvas({ blocks, config, onSelect }: Props) {
         if (b.imageUrl && !img) {
           img = new Image();
           img.crossOrigin = "anonymous";
-          // force trigger redraw when loaded
           img.onload = () => setTick((t) => t + 1);
           img.onerror = () => setTick((t) => t + 1);
           img.src = b.imageUrl;
           imgCache.current.set(key, img);
         }
+
         if (img && img.complete && img.naturalWidth > 0) {
-          // crisp image with border
           ctx.save();
-          ctx.shadowColor = "rgba(0,0,0,0.08)";
-          ctx.shadowBlur = 6 / scale;
           ctx.drawImage(img, b.x, b.y, b.size, b.size);
           ctx.restore();
         } else {
-          // branded fallback — initials with color, not grey placeholder
-          const hue = (b.x * 7 + b.y * 13) % 360;
-          ctx.fillStyle = `hsl(${hue} 70% 88%)`;
+          const hue = (b.x * 11 + b.y * 17) % 360;
+          ctx.fillStyle = `hsl(${hue} 70% 90%)`;
           ctx.fillRect(b.x, b.y, b.size, b.size);
-          // initials
           const initials = (b.title || "PX").slice(0, 2).toUpperCase();
           ctx.fillStyle = `hsl(${hue} 60% 28%)`;
-          const fontSize = Math.max(7, Math.min(22, b.size * 0.45));
+          const fontSize = Math.max(8, Math.min(22, b.size * 0.45));
           ctx.font = `800 ${fontSize}px Inter, sans-serif`;
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
           ctx.fillText(initials, b.x + b.size / 2, b.y + b.size / 2);
           ctx.textAlign = "left";
           ctx.textBaseline = "alphabetic";
-          if (b.status === "pending_review") {
-            ctx.fillStyle = "rgba(251,191,36,0.9)";
-            ctx.fillRect(b.x, b.y, b.size, 3 / scale);
-          }
         }
-        // border + subtle inner highlight
-        ctx.strokeStyle = b.status === "pending_review" ? "#f59e0b" : "rgba(0,0,0,0.12)";
+
+        ctx.strokeStyle =
+          b.status === "pending_review" ? "#f59e0b" : "rgba(0,0,0,0.15)";
         ctx.lineWidth = Math.max(1 / scale, 1.2 / scale);
-        ctx.strokeRect(b.x + 0.5 / scale, b.y + 0.5 / scale, b.size - 1 / scale, b.size - 1 / scale);
+        ctx.strokeRect(b.x, b.y, b.size, b.size);
       } else if (b.status === "reserved") {
-        ctx.fillStyle = "rgba(255,59,48,0.18)";
+        ctx.fillStyle = "rgba(255,59,48,0.15)";
         ctx.fillRect(b.x, b.y, b.size, b.size);
-        ctx.strokeStyle = "rgba(255,59,48,0.5)";
-        ctx.setLineDash([5 / scale, 5 / scale]);
+        ctx.strokeStyle = "rgba(255,59,48,0.6)";
+        ctx.setLineDash([4 / scale, 4 / scale]);
         ctx.lineWidth = 1.5 / scale;
         ctx.strokeRect(b.x, b.y, b.size, b.size);
         ctx.setLineDash([]);
       }
     }
 
-    if (dragStart && dragEnd) {
-      const size = Math.max(1, Math.min(Math.abs(dragEnd.x - dragStart.x), Math.abs(dragEnd.y - dragStart.y)));
-      const sx = dragStart.x;
-      const sy = dragStart.y;
-      const ix = Math.max(0, Math.round(dragEnd.x >= dragStart.x ? sx : sx - size));
-      const iy = Math.max(0, Math.round(dragEnd.y >= dragStart.y ? sy : sy - size));
-      const isOverlap = hasOverlap(ix, iy, size);
-      ctx.fillStyle = isOverlap ? "rgba(239,68,68,0.22)" : "rgba(34,197,94,0.22)";
-      ctx.fillRect(ix, iy, size, size);
-      ctx.strokeStyle = isOverlap ? "#ef4444" : "#16a34a";
-      ctx.lineWidth = 2.2 / scale;
-      ctx.setLineDash([]);
-      ctx.strokeRect(ix, iy, size, size);
-      ctx.fillStyle = isOverlap ? "#dc2626" : "#15803d";
-      ctx.font = `800 ${13 / scale}px Inter, sans-serif`;
-      const label = `${size}×${size} · $${size * size} · ${size * size} pixels`;
+    // Hover Highlight (snapped to 10px)
+    if (hoverGridPos && !selection) {
+      const hx = Math.floor(hoverGridPos.x / 10) * 10;
+      const hy = Math.floor(hoverGridPos.y / 10) * 10;
+      if (hx >= 0 && hy >= 0 && hx < config.width && hy < config.height) {
+        ctx.fillStyle = "rgba(0, 0, 0, 0.08)";
+        ctx.fillRect(hx, hy, 10, 10);
+        ctx.strokeStyle = "#18181b";
+        ctx.lineWidth = 1.2 / scale;
+        ctx.strokeRect(hx, hy, 10, 10);
+      }
+    }
+
+    // Render Active Selection & Live Preview
+    if (selection) {
+      const { x, y, size } = selection;
+      const isOverlap = hasOverlap(x, y, size);
+
+      ctx.save();
+      if (previewImgRef.current && !isOverlap) {
+        ctx.drawImage(previewImgRef.current, x, y, size, size);
+      } else {
+        ctx.fillStyle = isOverlap
+          ? "rgba(239, 68, 68, 0.25)"
+          : "rgba(16, 185, 129, 0.2)";
+        ctx.fillRect(x, y, size, size);
+
+        if (previewTitle && !isOverlap) {
+          ctx.fillStyle = "#047857";
+          const fontSize = Math.max(8, Math.min(16, size * 0.2));
+          ctx.font = `800 ${fontSize}px Inter, sans-serif`;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(
+            previewTitle.slice(0, 12),
+            x + size / 2,
+            y + size / 2
+          );
+          ctx.textAlign = "left";
+          ctx.textBaseline = "alphabetic";
+        }
+      }
+
+      // Animated glowing border for selection
+      ctx.strokeStyle = isOverlap ? "#ef4444" : "#ff3b30";
+      ctx.lineWidth = 2.5 / scale;
+      ctx.strokeRect(x, y, size, size);
+
+      // Coordinate & Price Badge Above Square
+      const units = Math.max(1, Math.round((size / 10) * (size / 10)));
+      const label = `${size}×${size} (${units} blocks) · $${units}.00`;
+      ctx.font = `800 ${12 / scale}px Inter, sans-serif`;
       const tw = ctx.measureText(label).width;
-      ctx.fillStyle = isOverlap ? "rgba(239,68,68,0.95)" : "rgba(22,163,74,0.95)";
-      ctx.fillRect(ix, iy - 18 / scale, tw + 10 / scale, 14 / scale);
-      ctx.fillStyle = "#fff";
-      ctx.fillText(label, ix + 5 / scale, iy - 7 / scale);
+      const badgeW = tw + 14 / scale;
+      const badgeH = 18 / scale;
+      const badgeX = Math.min(config.width - badgeW, Math.max(0, x));
+      const badgeY = Math.max(20 / scale, y - 6 / scale);
+
+      ctx.fillStyle = isOverlap ? "#dc2626" : "#18181b";
+      ctx.beginPath();
+      ctx.roundRect(badgeX, badgeY - badgeH, badgeW, badgeH, 4 / scale);
+      ctx.fill();
+
+      ctx.fillStyle = "#ffffff";
+      ctx.fillText(label, badgeX + 7 / scale, badgeY - 5 / scale);
+
+      ctx.restore();
     }
 
     ctx.restore();
-  }, [blocks, config, pan, scale, dragStart, dragEnd, hasOverlap, tick]);
+  }, [
+    blocks,
+    config,
+    pan,
+    scale,
+    selection,
+    hoverGridPos,
+    previewTitle,
+    hasOverlap,
+    tick,
+  ]);
 
+  // Wheel zoom
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
       const delta = -e.deltaY * 0.0015;
-      setScale(s => Math.min(4, Math.max(0.35, s + delta)));
+      setScale((s) => Math.min(4, Math.max(0.35, s + delta)));
     };
     el.addEventListener("wheel", onWheel, { passive: false });
     return () => el.removeEventListener("wheel", onWheel);
@@ -238,104 +384,263 @@ export default function PixelCanvas({ blocks, config, onSelect }: Props) {
       setLastPanPoint({ x: e.clientX, y: e.clientY });
       return;
     }
-    const clamped = { x: Math.floor(world.x), y: Math.floor(world.y) };
-    setDragStart(clamped);
-    setDragEnd(clamped);
+
+    // Snap to 10px grid
+    const gx = Math.floor(world.x / 10) * 10;
+    const gy = Math.floor(world.y / 10) * 10;
+
+    if (gx < 0 || gy < 0 || gx >= config.width || gy >= config.height) return;
+
+    // Check if clicked inside existing block to view it
+    const existing = getBlockAt(world.x, world.y);
+    if (existing && existing.status === "active") {
+      setHoverBlock(existing);
+      return;
+    }
+
+    // Check if clicking inside current selection to drag-move it
+    if (
+      selection &&
+      world.x >= selection.x &&
+      world.x < selection.x + selection.size &&
+      world.y >= selection.y &&
+      world.y < selection.y + selection.size
+    ) {
+      setIsDraggingSelection(true);
+      setLastPanPoint({ x: gx - selection.x, y: gy - selection.y });
+      return;
+    }
+
+    // Select this 10x10 spot
+    const initialSize = selection ? selection.size : 10;
+    const clampedX = Math.min(config.width - initialSize, Math.max(0, gx));
+    const clampedY = Math.min(config.height - initialSize, Math.max(0, gy));
+
+    onSelect({
+      x: clampedX,
+      y: clampedY,
+      size: initialSize,
+      priceCents: priceFor(initialSize),
+    });
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
+    const world = canvasToWorld(e.clientX, e.clientY);
+
     if (isPanning && lastPanPoint) {
       const dx = e.clientX - lastPanPoint.x;
       const dy = e.clientY - lastPanPoint.y;
-      setPan(p => ({ x: p.x + dx, y: p.y + dy }));
+      setPan((p) => ({ x: p.x + dx, y: p.y + dy }));
       setLastPanPoint({ x: e.clientX, y: e.clientY });
       return;
     }
-    const world = canvasToWorld(e.clientX, e.clientY);
-    if (dragStart && e.buttons === 1) {
-      setDragEnd({ x: Math.floor(world.x), y: Math.floor(world.y) });
-    } else {
-      const b = getBlockAt(Math.floor(world.x), Math.floor(world.y));
-      setHover(b);
+
+    if (isDraggingSelection && selection && lastPanPoint) {
+      const gx = Math.floor(world.x / 10) * 10;
+      const gy = Math.floor(world.y / 10) * 10;
+      const targetX = Math.min(
+        config.width - selection.size,
+        Math.max(0, gx - lastPanPoint.x)
+      );
+      const targetY = Math.min(
+        config.height - selection.size,
+        Math.max(0, gy - lastPanPoint.y)
+      );
+
+      onSelect({
+        ...selection,
+        x: targetX,
+        y: targetY,
+      });
+      return;
     }
+
+    setHoverGridPos({ x: world.x, y: world.y });
+    const b = getBlockAt(Math.floor(world.x), Math.floor(world.y));
+    setHoverBlock(b);
   };
 
   const handlePointerUp = () => {
-    if (isPanning) {
-      setIsPanning(false);
-      setLastPanPoint(null);
-      return;
-    }
-    if (!dragStart || !dragEnd) return;
-    const size = Math.max(1, Math.min(Math.abs(dragEnd.x - dragStart.x), Math.abs(dragEnd.y - dragStart.y)));
-    const sx = dragStart.x;
-    const sy = dragStart.y;
-    const ix = Math.max(0, Math.round(dragEnd.x >= dragStart.x ? sx : sx - size));
-    const iy = Math.max(0, Math.round(dragEnd.y >= dragStart.y ? sy : sy - size));
-    setDragStart(null);
-    setDragEnd(null);
-    if (size < 1) return;
-    if (hasOverlap(ix, iy, size)) return;
-    const finalSize = Math.min(size, 50);
-    onSelect({ x: ix, y: iy, size: finalSize, priceCents: priceFor(finalSize) });
+    setIsPanning(false);
+    setIsDraggingSelection(false);
+    setLastPanPoint(null);
+  };
+
+  const handleSetSize = (newSize: number) => {
+    const clampedSize = Math.max(10, Math.min(100, Math.round(newSize / 10) * 10));
+    const currentX = selection ? selection.x : 0;
+    const currentY = selection ? selection.y : 0;
+    const clampedX = Math.min(config.width - clampedSize, Math.max(0, currentX));
+    const clampedY = Math.min(config.height - clampedSize, Math.max(0, currentY));
+
+    onSelect({
+      x: clampedX,
+      y: clampedY,
+      size: clampedSize,
+      priceCents: priceFor(clampedSize),
+    });
   };
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex flex-wrap items-center gap-2 text-xs">
-        <div className="inline-flex items-center gap-2 bg-zinc-900 text-white rounded-full px-3 py-1.5">
-          <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" /> LIVE CANVAS
-          <span className="opacity-60">1000×1000</span>
-          <span className="bg-white/10 px-1.5 py-0.5 rounded text-[10px]">{blocks.length} live</span>
+      {/* Top Canvas Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+        <div className="flex items-center gap-2">
+          <div className="inline-flex items-center gap-2 bg-zinc-950 text-white rounded-full px-3.5 py-1.5 font-bold shadow-xs">
+            <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
+            <span>1000×1000 Grid</span>
+            <span className="text-zinc-500">•</span>
+            <span className="text-amber-400 font-mono">$1 / 10×10 block</span>
+          </div>
+
+          <div className="flex items-center gap-1 bg-white border border-zinc-200 rounded-full p-1 shadow-2xs">
+            <button
+              onClick={() => setScale((s) => Math.min(4, s + 0.18))}
+              className="w-7 h-7 grid place-items-center rounded-full hover:bg-zinc-100 font-bold"
+              title="Zoom In"
+            >
+              ＋
+            </button>
+            <span className="px-2 font-mono text-xs font-bold text-zinc-700">
+              {Math.round(scale * 100)}%
+            </span>
+            <button
+              onClick={() => setScale((s) => Math.max(0.35, s - 0.18))}
+              className="w-7 h-7 grid place-items-center rounded-full hover:bg-zinc-100 font-bold"
+              title="Zoom Out"
+            >
+              －
+            </button>
+            <button
+              onClick={() => {
+                const el = containerRef.current;
+                if (!el) return;
+                const w = el.clientWidth,
+                  h = el.clientHeight;
+                const s = Math.min(
+                  w / (config.width + 40),
+                  h / (config.height + 40)
+                );
+                const target = Math.max(0.6, Math.min(1.4, s * 0.98));
+                setScale(target);
+                setPan({
+                  x: (w - config.width * target) / 2,
+                  y: (h - config.height * target) / 2,
+                });
+              }}
+              className="px-3 py-1 rounded-full bg-zinc-900 text-white text-xs font-bold hover:bg-black transition"
+            >
+              Fit
+            </button>
+          </div>
         </div>
-        <div className="flex items-center gap-1 bg-white border border-zinc-200 rounded-full p-1">
-          <button onClick={() => setScale(s => Math.min(4, s + 0.18))} className="w-7 h-7 grid place-items-center rounded-full hover:bg-zinc-100">＋</button>
-          <span className="px-2 font-mono text-xs">{Math.round(scale * 100)}%</span>
-          <button onClick={() => setScale(s => Math.max(0.35, s - 0.18))} className="w-7 h-7 grid place-items-center rounded-full hover:bg-zinc-100">－</button>
-          <button onClick={() => {
-            const el = containerRef.current;
-            if (!el) return;
-            const w = el.clientWidth, h = el.clientHeight;
-            const s = Math.min(w / (config.width + 40), h / (config.height + 40));
-            const target = Math.max(0.6, Math.min(1.4, s * 0.98));
-            setScale(target);
-            setPan({ x: (w - config.width * target) / 2, y: (h - config.height * target) / 2 });
-          }} className="px-3 py-1 rounded-full bg-zinc-900 text-white text-xs font-bold">Fit</button>
-          <button onClick={() => { setPan({ x: 12, y: 12 }); setScale(0.95); }} className="px-2 py-1 rounded-full hover:bg-zinc-100 text-xs">Reset</button>
-        </div>
-        <span className="text-zinc-500 hidden lg:inline">Drag to select • Shift+drag to pan • Scroll to zoom</span>
-        {hover && (
-          <Link href={`/block/${hover.id}`} className="ml-auto inline-flex items-center gap-2 border border-zinc-200 bg-white rounded-full px-3 py-1.5 hover:bg-zinc-50 max-w-[260px]">
-            <img src={hover.imageUrl || `https://avatar.vercel.sh/${encodeURIComponent(hover.title || hover.id)}.png`} alt="" className="w-6 h-6 rounded object-cover border border-zinc-200" />
-            <span className="font-bold truncate">{hover.title}</span>
-            <span className="text-zinc-500 shrink-0">{hover.size}×{hover.size} · {hover.clicks} clicks</span>
+
+        {/* Hover Inspector */}
+        {hoverBlock && hoverBlock.status === "active" && (
+          <Link
+            href={`/block/${encodeURIComponent(hoverBlock.id)}`}
+            className="inline-flex items-center gap-2 border border-zinc-200 bg-white rounded-full px-3 py-1.5 hover:bg-zinc-50 max-w-[280px] shadow-xs transition"
+          >
+            {hoverBlock.imageUrl ? (
+              <img
+                src={hoverBlock.imageUrl}
+                alt=""
+                className="w-5 h-5 rounded object-contain border border-zinc-100 bg-white"
+              />
+            ) : (
+              <span className="w-5 h-5 rounded bg-zinc-900 text-white text-[10px] font-black grid place-items-center">
+                {(hoverBlock.title || "PX").slice(0, 2).toUpperCase()}
+              </span>
+            )}
+            <span className="font-bold truncate text-xs text-zinc-900">
+              {hoverBlock.title || "Untitled"}
+            </span>
+            <span className="text-zinc-500 text-[11px] shrink-0 font-mono">
+              {hoverBlock.size}×{hoverBlock.size} · {hoverBlock.clicks} clicks
+            </span>
           </Link>
         )}
       </div>
 
-      <div
-        ref={containerRef}
-        className="relative w-full aspect-square sm:aspect-[1.15] bg-white border border-zinc-200 rounded-2xl overflow-hidden shadow-sm"
-      >
-        <canvas
-          ref={canvasRef}
-          className="absolute inset-0 w-full h-full touch-none cursor-crosshair"
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-          style={{ touchAction: "none" }}
-        />
-        <div className="absolute bottom-3 left-3 flex items-center gap-1 bg-white/95 backdrop-blur border border-zinc-200 rounded-full p-1 shadow">
-          {[1,2,3,5,10,20].map(s => (
-            <span key={s} className="px-2.5 py-1 rounded-full text-xs font-bold bg-zinc-900 text-white/0 hidden">x</span>
-          ))}
-          <span className="px-2.5 py-1 text-xs font-bold text-zinc-600">Tip: drag any square — pay size² × $1</span>
+      {/* Main Canvas Area & 10x10 Size Presets Column */}
+      <div className="grid lg:grid-cols-[1fr_120px] gap-3">
+        <div
+          ref={containerRef}
+          className="relative w-full aspect-square sm:aspect-[1.12] bg-zinc-100 border border-zinc-300 rounded-3xl overflow-hidden shadow-inner"
+        >
+          <canvas
+            ref={canvasRef}
+            className={`absolute inset-0 w-full h-full touch-none ${
+              isDraggingSelection ? "cursor-grabbing" : "cursor-crosshair"
+            }`}
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            style={{ touchAction: "none" }}
+          />
+
+          <div className="absolute bottom-3 left-3 bg-white/95 backdrop-blur border border-zinc-200 rounded-full px-3.5 py-1.5 text-xs font-bold text-zinc-700 shadow-sm pointer-events-none">
+            💡 Click any open 10×10 cell to select · Drag selection box to reposition
+          </div>
         </div>
-        <div className="absolute top-3 right-3 bg-white/95 backdrop-blur border border-zinc-200 rounded-xl px-3 py-2 text-xs shadow max-w-[220px]">
-          <div className="font-bold">Own a square</div>
-          <div className="text-zinc-500 leading-tight">Select → pay via Dodo → live 30 days → clicks tracked on leaderboard</div>
+
+        {/* 10x10 Presets Column */}
+        <div className="flex lg:flex-col gap-2 overflow-x-auto lg:overflow-visible p-2 bg-white border border-zinc-200 rounded-3xl shadow-xs">
+          <div className="text-[11px] font-black uppercase tracking-wider text-zinc-500 px-2 pt-1 hidden lg:block">
+            Size Column
+          </div>
+          {[
+            { size: 10, label: "10×10", price: "$1", blocks: 1 },
+            { size: 20, label: "20×20", price: "$4", blocks: 4 },
+            { size: 30, label: "30×30", price: "$9", blocks: 9 },
+            { size: 40, label: "40×40", price: "$16", blocks: 16 },
+            { size: 50, label: "50×50", price: "$25", blocks: 25 },
+            { size: 80, label: "80×80", price: "$64", blocks: 64 },
+            { size: 100, label: "100×100", price: "$100", blocks: 100 },
+          ].map((preset) => {
+            const isCurrent = selection?.size === preset.size;
+            return (
+              <button
+                key={preset.size}
+                onClick={() => handleSetSize(preset.size)}
+                className={`flex-1 lg:flex-none flex flex-col items-center justify-center p-2.5 rounded-2xl border transition text-center shrink-0 ${
+                  isCurrent
+                    ? "bg-zinc-950 text-white border-zinc-950 shadow-md ring-2 ring-red-500"
+                    : "bg-zinc-50 hover:bg-zinc-100 border-zinc-200 text-zinc-900"
+                }`}
+              >
+                <span className="font-black text-xs">{preset.label}</span>
+                <span
+                  className={`text-[10px] font-bold mt-0.5 ${
+                    isCurrent ? "text-amber-400" : "text-zinc-500"
+                  }`}
+                >
+                  {preset.price} ({preset.blocks}b)
+                </span>
+              </button>
+            );
+          })}
+
+          {/* Stepper Buttons */}
+          <div className="flex items-center gap-1 mt-auto pt-2 border-t border-zinc-100">
+            <button
+              onClick={() => handleSetSize((selection?.size || 10) - 10)}
+              className="flex-1 py-1.5 rounded-xl border border-zinc-200 bg-zinc-50 hover:bg-zinc-100 text-xs font-bold text-zinc-700 text-center"
+              title="Decrease size by 10px"
+            >
+              -10
+            </button>
+            <button
+              onClick={() => handleSetSize((selection?.size || 10) + 10)}
+              className="flex-1 py-1.5 rounded-xl border border-zinc-200 bg-zinc-50 hover:bg-zinc-100 text-xs font-bold text-zinc-700 text-center"
+              title="Increase size by 10px"
+            >
+              +10
+            </button>
+          </div>
         </div>
       </div>
     </div>
   );
 }
+
