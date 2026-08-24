@@ -64,7 +64,15 @@ export default function Navbar() {
           <Link href="/rules" onClick={() => setMobile(false)}>Rules</Link>
           <Link href="/about" onClick={() => setMobile(false)}>About</Link>
           <Link href="/dashboard" onClick={() => setMobile(false)}>Dashboard</Link>
-          <Link href="/admin" onClick={() => setMobile(false)}>Admin</Link>
+          {user ? (
+            <button onClick={() => { signOut(); setMobile(false); }} className="text-left text-red-600 font-bold py-1">
+              Sign Out ({user.name || user.email})
+            </button>
+          ) : (
+            <Link href="/sign-in" onClick={() => setMobile(false)} className="font-bold text-[#ff3b30]">
+              Sign In / Sign Up →
+            </Link>
+          )}
         </div>
       )}
     </header>

@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { formatCents } from "@/lib/utils";
-import { useSession } from "@/lib/auth-client";
+import { useSession, signOut } from "@/lib/auth-client";
 
 type Block = {
   id: string;
@@ -21,33 +21,42 @@ type Block = {
 
 export default function DashboardPage() {
   const { data: session, isPending } = useSession();
-  const [blocks, setBlocks] = useState<Block[]>([]);
+  const [userBlocks, setUserBlocks] = useState<Block[]>([]);
   const [filter, setFilter] = useState<"all" | "active" | "pending_review" | "reserved" | "expired">("all");
   const [loading, setLoading] = useState(true);
 
-  const load = async () => {
-    setLoading(true);
-    try {
-      const r = await fetch("/api/canvas", { cache: "no-store" });
-      const j = await r.json();
-      setBlocks(j.blocks || []);
-    } catch {
-      console.error("Failed to load dashboard blocks");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    load();
-  }, []);
-
   const user = session?.user;
 
-  // Filter to user's blocks if logged in and user has blocks; otherwise show all
-  const userBlocks = user ? blocks.filter(b => b.ownerId === user.id) : [];
-  const displaySource = user && userBlocks.length > 0 ? userBlocks : blocks;
-  const filtered = filter === "all" ? displaySource : displaySource.filter(b => b.status === filter);
+  useEffect(() => {
+    if (isPending) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
+    const loadUserBlocks = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch("/api/user/blocks", { cache: "no-store" });
+        const data = await res.json();
+        if (data.authenticated && Array.isArray(data.blocks)) {
+          setUserBlocks(data.blocks);
+        } else {
+          // Fallback: load canvas and filter by owner_id or email
+          const r = await fetch("/api/canvas", { cache: "no-store" });
+          const j = await r.json();
+          const allBlocks = (j.blocks || []) as Block[];
+          setUserBlocks(allBlocks.filter((b) => b.ownerId === user.id));
+        }
+      } catch (err) {
+        console.error("Failed to load user blocks:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadUserBlocks();
+  }, [user, isPending]);
 
   const renew = async (b: Block) => {
     try {
@@ -72,79 +81,168 @@ export default function DashboardPage() {
     }
   };
 
+  // 1. Loading State
+  if (isPending) {
+    return (
+      <div className="mx-auto max-w-[1150px] px-4 py-20 text-center">
+        <div className="w-6 h-6 border-2 border-zinc-900 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+        <div className="text-sm font-bold text-zinc-500">Checking your session…</div>
+      </div>
+    );
+  }
+
+  // 2. Unauthenticated Gate State — Never leak other users' blocks
+  if (!user) {
+    return (
+      <div className="mx-auto max-w-[560px] px-4 py-16 sm:py-24">
+        <div className="bg-white border border-zinc-200/90 rounded-3xl p-8 sm:p-10 shadow-xs text-center">
+          <div className="w-14 h-14 rounded-2xl bg-zinc-950 text-white grid place-items-center text-2xl mx-auto mb-5 shadow-sm">
+            📊
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-black text-zinc-950 tracking-tight">
+            Sign In to Access Your Dashboard
+          </h1>
+          <p className="text-sm text-zinc-600 mt-2 leading-relaxed">
+            Your personal advertiser dashboard gives you direct control over your live pixel squares, click analytics, and renewal leases.
+          </p>
+
+          <div className="mt-8 space-y-3">
+            <Link
+              href="/sign-in"
+              className="w-full bg-[#ff3b30] hover:bg-[#e5352c] text-white rounded-2xl py-3.5 font-bold text-sm transition shadow-md hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-2"
+            >
+              Sign In or Create Account →
+            </Link>
+            <Link
+              href="/"
+              className="w-full border border-zinc-200 bg-white hover:bg-zinc-50 rounded-2xl py-3 text-xs font-bold text-zinc-700 transition block"
+            >
+              ← Return to Live Billboard
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 3. Authenticated Dashboard UI
+  const totalClicks = userBlocks.reduce((acc, b) => acc + (b.clicks || 0), 0);
+  const activeCount = userBlocks.filter((b) => b.status === "active").length;
+  const filtered = filter === "all" ? userBlocks : userBlocks.filter((b) => b.status === filter);
+
   return (
-    <div className="mx-auto max-w-[1150px] px-4 py-8">
-      <div className="flex flex-wrap items-end justify-between gap-4">
+    <div className="mx-auto max-w-[1200px] px-4 py-8">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-zinc-200 pb-6">
         <div>
-          <h1 className="text-3xl font-black tracking-tight">Your Dashboard</h1>
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-3xl font-black tracking-tight text-zinc-950">
+              Advertiser Dashboard
+            </h1>
+            <span className="text-[10px] font-bold bg-zinc-100 text-zinc-700 border border-zinc-200 px-2.5 py-0.5 rounded-full">
+              {user.name || user.email}
+            </span>
+          </div>
           <p className="text-sm text-zinc-600 mt-1">
-            {user
-              ? `Logged in as ${user.name || user.email}. Manage your active pixel leases, track clicks, and renew.`
-              : "Track your rented pixels, view live click metrics, and renew expiring leases."}
+            Manage your active billboard squares, view live click metrics, and renew your 30-day spots.
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          {!user && !isPending && (
-            <Link href="/sign-in" className="border border-zinc-200 bg-white rounded-full px-5 py-2.5 text-sm font-bold hover:bg-zinc-50 transition">
-              Sign In to Your Account
-            </Link>
-          )}
-          <Link href="/#canvas" className="bg-[#ff3b30] text-white rounded-full px-5 py-2.5 text-sm font-bold hover:bg-[#e5352c] transition shadow-sm">
-            + Rent More Pixels
+
+        <div className="flex items-center gap-2.5">
+          <Link
+            href="/#canvas-section"
+            className="bg-[#ff3b30] hover:bg-[#e5352c] text-white rounded-full px-5 py-2.5 text-xs font-bold transition shadow-xs"
+          >
+            + Claim New Square
           </Link>
+          <button
+            onClick={() => signOut()}
+            className="border border-zinc-200 bg-white hover:bg-zinc-50 rounded-full px-4 py-2.5 text-xs font-bold text-zinc-700 transition shadow-2xs"
+          >
+            Sign Out
+          </button>
         </div>
       </div>
 
-      <div className="mt-6 flex flex-wrap gap-2 text-sm">
-        {(["all", "active", "pending_review", "reserved", "expired"] as const).map(f => (
+      {/* Metrics Row */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-6">
+        <div className="bg-white border border-zinc-200/90 rounded-2xl p-4 shadow-2xs">
+          <div className="text-xs font-bold uppercase tracking-wider text-zinc-500">Active Squares</div>
+          <div className="text-2xl sm:text-3xl font-black text-zinc-950 mt-1">{activeCount}</div>
+        </div>
+
+        <div className="bg-white border border-zinc-200/90 rounded-2xl p-4 shadow-2xs">
+          <div className="text-xs font-bold uppercase tracking-wider text-zinc-500">Total Clicks Tracked</div>
+          <div className="text-2xl sm:text-3xl font-black text-zinc-950 mt-1">{totalClicks.toLocaleString()}</div>
+        </div>
+
+        <div className="col-span-2 sm:col-span-1 bg-white border border-zinc-200/90 rounded-2xl p-4 shadow-2xs">
+          <div className="text-xs font-bold uppercase tracking-wider text-zinc-500">Total Squares Claimed</div>
+          <div className="text-2xl sm:text-3xl font-black text-zinc-950 mt-1">{userBlocks.length}</div>
+        </div>
+      </div>
+
+      {/* Filter Tabs */}
+      <div className="mt-8 flex flex-wrap gap-2 text-xs">
+        {(["all", "active", "pending_review", "reserved", "expired"] as const).map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f)}
-            className={`px-4 py-1.5 rounded-full border capitalize font-medium transition ${
-              filter === f ? "bg-zinc-900 text-white border-zinc-900" : "bg-white border-zinc-200 hover:bg-zinc-50"
+            className={`px-4 py-1.5 rounded-full border capitalize font-bold transition ${
+              filter === f
+                ? "bg-zinc-950 text-white border-zinc-950 shadow-2xs"
+                : "bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50"
             }`}
           >
-            {f.replace("_", " ")} ({displaySource.filter(b => f === "all" ? true : b.status === f).length})
+            {f.replace("_", " ")} ({userBlocks.filter((b) => (f === "all" ? true : b.status === f)).length})
           </button>
         ))}
       </div>
 
+      {/* Blocks Grid or Empty State */}
       {loading ? (
-        <div className="mt-12 text-center py-12 text-zinc-400">Loading dashboard inventory…</div>
-      ) : (
+        <div className="mt-12 text-center py-12 text-zinc-400 font-bold">Loading your active squares…</div>
+      ) : filtered.length > 0 ? (
         <div className="mt-6 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {filtered.map(b => {
+          {filtered.map((b) => {
             const daysLeft = b.expiresAt
               ? Math.max(0, Math.ceil((new Date(b.expiresAt).getTime() - Date.now()) / 86400000))
               : null;
+
             return (
-              <div key={b.id} className="bg-white border border-zinc-200 rounded-3xl overflow-hidden shadow-sm flex flex-col justify-between">
+              <div
+                key={b.id}
+                className="bg-white border border-zinc-200 rounded-3xl overflow-hidden shadow-xs flex flex-col justify-between"
+              >
                 <div className="aspect-[1.8] bg-zinc-100 overflow-hidden relative">
                   {b.imageUrl ? (
-                    <img src={b.imageUrl} alt="" className="w-full h-full object-cover" />
+                    <img src={b.imageUrl} alt="" className="w-full h-full object-contain p-4 bg-white" />
                   ) : (
                     <div className="w-full h-full grid place-items-center text-zinc-400 text-xs font-bold">
                       No Image Set
                     </div>
                   )}
-                  <span className="absolute top-3 right-3 bg-zinc-900/80 backdrop-blur text-white text-[11px] font-bold px-2.5 py-1 rounded-full">
-                    {b.size}×{b.size} ({b.size * b.size} px)
+                  <span className="absolute top-3 right-3 bg-zinc-950 text-white text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full shadow-2xs">
+                    {b.size}×{b.size} px
                   </span>
                 </div>
+
                 <div className="p-5 flex-1 flex flex-col justify-between">
                   <div>
-                    <div className="font-black text-base truncate">{b.title || "Untitled Block"}</div>
+                    <div className="font-bold text-base text-zinc-950 truncate">
+                      {b.title || "Untitled Block"}
+                    </div>
                     <div className="text-xs text-zinc-500 mt-1 flex flex-wrap items-center gap-2">
-                      <span>Coord: {b.x},{b.y}</span>
+                      <span>📍 ({b.x}, {b.y})</span>
                       <span>•</span>
-                      <span>Paid: {formatCents(b.priceCents)}</span>
+                      <span>💰 {formatCents(b.priceCents)}</span>
                       <span>•</span>
                       <span><b>{b.clicks}</b> clicks</span>
                     </div>
 
                     <div className="mt-3 flex items-center justify-between">
                       <span
-                        className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${
+                        className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${
                           b.status === "active"
                             ? "bg-emerald-50 border-emerald-200 text-emerald-700"
                             : b.status === "pending_review"
@@ -168,12 +266,12 @@ export default function DashboardPage() {
                       href={`/block/${encodeURIComponent(b.id)}`}
                       className="flex-1 text-center border border-zinc-200 rounded-full py-2 text-xs font-bold hover:bg-zinc-50 transition"
                     >
-                      View Live Block
+                      View Block
                     </Link>
                     {b.status === "active" && (
                       <button
                         onClick={() => renew(b)}
-                        className="flex-1 bg-zinc-900 text-white rounded-full py-2 text-xs font-bold hover:bg-black transition shadow-sm"
+                        className="flex-1 bg-zinc-950 text-white rounded-full py-2 text-xs font-bold hover:bg-black transition shadow-2xs"
                       >
                         Renew Lease
                       </button>
@@ -184,21 +282,21 @@ export default function DashboardPage() {
             );
           })}
         </div>
-      )}
-
-      {!loading && filtered.length === 0 && (
-        <div className="mt-12 text-center py-16 bg-white border border-zinc-200 rounded-3xl p-8">
-          <div className="text-4xl">🎨</div>
-          <h3 className="mt-3 text-lg font-bold">No blocks found in this view</h3>
-          <p className="text-sm text-zinc-500 mt-1 max-w-sm mx-auto">
-            Select a square on the live canvas to claim your spot and get listed on the leaderboard.
+      ) : (
+        <div className="mt-10 text-center py-16 bg-white border border-zinc-200/90 rounded-3xl p-8 shadow-xs">
+          <div className="text-4xl mb-2">🎯</div>
+          <h3 className="text-lg font-black text-zinc-950">You haven&apos;t claimed any squares yet</h3>
+          <p className="text-xs text-zinc-500 mt-1 max-w-sm mx-auto">
+            Claim a spot on the 1000×1000 live billboard to start driving traffic to your project and get ranked on the leaderboard.
           </p>
-          <Link href="/#canvas" className="mt-6 inline-block bg-[#ff3b30] text-white rounded-full px-6 py-2.5 text-sm font-bold hover:bg-[#e5352c] transition">
-            Claim Your Square Now
+          <Link
+            href="/#canvas-section"
+            className="mt-5 inline-block bg-[#ff3b30] hover:bg-[#e5352c] text-white rounded-full px-6 py-2.5 text-xs font-bold transition shadow-xs"
+          >
+            Claim Your First Square →
           </Link>
         </div>
       )}
     </div>
   );
 }
-
