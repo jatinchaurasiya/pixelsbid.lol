@@ -603,6 +603,51 @@ export default function TodayPage() {
                 </select>
               </div>
 
+              {/* Dynamic Size Selection */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-bold text-zinc-800">
+                    Square Dimensions
+                  </label>
+                  <span className="text-[11px] font-mono font-bold text-amber-600">
+                    {outbidForm.size}×{outbidForm.size} px ({formatCents(Math.max(1, Math.round(Math.pow(outbidForm.size / 10, 2))) * 100)})
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min="10"
+                    max="1000"
+                    step="10"
+                    value={outbidForm.size}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value, 10);
+                      if (!isNaN(val) && val >= 10) {
+                        setOutbidForm({ ...outbidForm, size: Math.min(1000, Math.round(val / 10) * 10) });
+                      }
+                    }}
+                    className="w-28 border border-zinc-200 rounded-xl px-3 py-2 text-xs font-mono font-bold bg-zinc-50 focus:bg-white focus:outline-none"
+                  />
+                  <div className="flex flex-wrap gap-1 flex-1">
+                    {[20, 50, 100, 150, 200, 300, 500].map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => setOutbidForm({ ...outbidForm, size: s })}
+                        className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border transition ${
+                          outbidForm.size === s
+                            ? "bg-zinc-900 text-white border-zinc-900 shadow-2xs"
+                            : "bg-zinc-50 border-zinc-200 text-zinc-700 hover:bg-zinc-100"
+                        }`}
+                      >
+                        {s}×{s}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
               <div className="pt-2">
                 <button
                   type="submit"

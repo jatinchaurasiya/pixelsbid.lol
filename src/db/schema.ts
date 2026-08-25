@@ -70,8 +70,8 @@ export const canvasConfig = pgTable("canvas_config", {
   unitPriceCents: integer("unit_price_cents").notNull().default(100),
   pricingMode: text("pricing_mode").notNull().default("squared"),
   leaseDays: integer("lease_days").notNull().default(30),
-  minSize: integer("min_size").notNull().default(1),
-  maxSize: integer("max_size").notNull().default(50),
+  minSize: integer("min_size").notNull().default(10),
+  maxSize: integer("max_size").notNull().default(1000),
 });
 
 export const pixelBlocks = pgTable("pixel_blocks", {

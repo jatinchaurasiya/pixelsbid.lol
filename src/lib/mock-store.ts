@@ -51,7 +51,7 @@ export const defaultConfig: CanvasConfig = {
   pricingMode: "squared",
   leaseDays: 30,
   minSize: 10,
-  maxSize: 100,
+  maxSize: 1000,
 };
 
 function rectOverlap(a: MockBlock, b: MockBlock) {

@@ -499,7 +499,7 @@ export default function PixelCanvas({
   };
 
   const handleSetSize = (newSize: number) => {
-    const clampedSize = Math.max(10, Math.min(100, Math.round(newSize / 10) * 10));
+    const clampedSize = Math.max(10, Math.min(config.width, Math.round(newSize / 10) * 10));
     const currentX = selection ? selection.x : 0;
     const currentY = selection ? selection.y : 0;
     const clampedX = Math.min(config.width - clampedSize, Math.max(0, currentX));
@@ -512,6 +512,8 @@ export default function PixelCanvas({
       priceCents: priceFor(clampedSize),
     });
   };
+
+  const currentSelectedSize = selection?.size || 20;
 
   return (
     <div className="flex flex-col gap-3">
@@ -594,8 +596,8 @@ export default function PixelCanvas({
         )}
       </div>
 
-      {/* Main Canvas Area & 10x10 Size Presets Column */}
-      <div className="grid lg:grid-cols-[1fr_120px] gap-3">
+      {/* Main Canvas Area & Dynamic Size Presets Column */}
+      <div className="grid lg:grid-cols-[1fr_135px] gap-3">
         <div
           ref={containerRef}
           className="relative w-full aspect-square sm:aspect-[1.12] bg-zinc-100 border border-zinc-300 rounded-3xl overflow-hidden shadow-inner"
@@ -612,15 +614,46 @@ export default function PixelCanvas({
           />
 
           <div className="absolute bottom-3 left-3 bg-white/95 backdrop-blur border border-zinc-200 rounded-full px-3.5 py-1.5 text-xs font-bold text-zinc-700 shadow-sm pointer-events-none">
-            💡 Click any open 10×10 cell to select · Drag selection box to reposition
+            💡 Click any open cell · Drag to reposition · Select any custom size
           </div>
         </div>
 
-        {/* 10x10 Presets Column */}
-        <div className="flex lg:flex-col gap-2 overflow-x-auto lg:overflow-visible p-2 bg-white border border-zinc-200 rounded-3xl shadow-xs">
-          <div className="text-[11px] font-black uppercase tracking-wider text-zinc-500 px-2 pt-1 hidden lg:block">
-            Size Column
+        {/* Dynamic Size Column with Custom Input & Presets */}
+        <div className="flex lg:flex-col gap-2 overflow-x-auto lg:overflow-y-auto lg:max-h-[620px] p-2.5 bg-white border border-zinc-200 rounded-3xl shadow-xs scrollbar-thin">
+          <div className="hidden lg:block border-b border-zinc-100 pb-2 mb-1">
+            <div className="text-[11px] font-black uppercase tracking-wider text-zinc-600">
+              Size Selection
+            </div>
+            <div className="text-[10px] text-zinc-400 mt-0.5">
+              10px to 1000px custom
+            </div>
           </div>
+
+          {/* Custom Size Input Field */}
+          <div className="bg-zinc-50 border border-zinc-200 rounded-2xl p-2 shrink-0">
+            <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">
+              Custom Size
+            </div>
+            <div className="flex items-center gap-1.5">
+              <input
+                type="number"
+                min="10"
+                max="1000"
+                step="10"
+                value={currentSelectedSize}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value, 10);
+                  if (!isNaN(val) && val >= 10) {
+                    handleSetSize(val);
+                  }
+                }}
+                className="w-full bg-white border border-zinc-200 rounded-xl px-2 py-1 text-xs font-mono font-bold text-zinc-900 text-center focus:outline-none focus:ring-1 focus:ring-zinc-900"
+              />
+              <span className="text-[11px] font-bold text-zinc-500">px</span>
+            </div>
+          </div>
+
+          {/* Quick Preset Buttons */}
           {[
             { size: 10, label: "10×10", price: "$1", blocks: 1 },
             { size: 20, label: "20×20", price: "$4", blocks: 4 },
@@ -629,16 +662,20 @@ export default function PixelCanvas({
             { size: 50, label: "50×50", price: "$25", blocks: 25 },
             { size: 80, label: "80×80", price: "$64", blocks: 64 },
             { size: 100, label: "100×100", price: "$100", blocks: 100 },
+            { size: 150, label: "150×150", price: "$225", blocks: 225 },
+            { size: 200, label: "200×200", price: "$400", blocks: 400 },
+            { size: 300, label: "300×300", price: "$900", blocks: 900 },
+            { size: 500, label: "500×500", price: "$2,500", blocks: 2500 },
           ].map((preset) => {
             const isCurrent = selection?.size === preset.size;
             return (
               <button
                 key={preset.size}
                 onClick={() => handleSetSize(preset.size)}
-                className={`flex-1 lg:flex-none flex flex-col items-center justify-center p-2.5 rounded-2xl border transition text-center shrink-0 ${
+                className={`flex-1 lg:flex-none flex flex-col items-center justify-center p-2 rounded-xl border transition text-center shrink-0 ${
                   isCurrent
                     ? "bg-zinc-950 text-white border-zinc-950 shadow-md ring-2 ring-red-500"
-                    : "bg-zinc-50 hover:bg-zinc-100 border-zinc-200 text-zinc-900"
+                    : "bg-zinc-50/70 hover:bg-zinc-100 border-zinc-200/90 text-zinc-900"
                 }`}
               >
                 <span className="font-black text-xs">{preset.label}</span>
@@ -653,21 +690,35 @@ export default function PixelCanvas({
             );
           })}
 
-          {/* Stepper Buttons */}
-          <div className="flex items-center gap-1 mt-auto pt-2 border-t border-zinc-100">
+          {/* Quick Stepper Buttons */}
+          <div className="grid grid-cols-2 gap-1.5 mt-auto pt-2 border-t border-zinc-100 shrink-0">
             <button
-              onClick={() => handleSetSize((selection?.size || 10) - 10)}
-              className="flex-1 py-1.5 rounded-xl border border-zinc-200 bg-zinc-50 hover:bg-zinc-100 text-xs font-bold text-zinc-700 text-center"
+              onClick={() => handleSetSize(currentSelectedSize - 10)}
+              className="py-1.5 rounded-xl border border-zinc-200 bg-zinc-50 hover:bg-zinc-100 text-[11px] font-bold text-zinc-700 text-center"
               title="Decrease size by 10px"
             >
-              -10
+              -10px
             </button>
             <button
-              onClick={() => handleSetSize((selection?.size || 10) + 10)}
-              className="flex-1 py-1.5 rounded-xl border border-zinc-200 bg-zinc-50 hover:bg-zinc-100 text-xs font-bold text-zinc-700 text-center"
+              onClick={() => handleSetSize(currentSelectedSize + 10)}
+              className="py-1.5 rounded-xl border border-zinc-200 bg-zinc-50 hover:bg-zinc-100 text-[11px] font-bold text-zinc-700 text-center"
               title="Increase size by 10px"
             >
-              +10
+              +10px
+            </button>
+            <button
+              onClick={() => handleSetSize(currentSelectedSize - 50)}
+              className="py-1 rounded-xl border border-zinc-200 bg-zinc-50 hover:bg-zinc-100 text-[10px] font-bold text-zinc-600 text-center"
+              title="Decrease size by 50px"
+            >
+              -50px
+            </button>
+            <button
+              onClick={() => handleSetSize(currentSelectedSize + 50)}
+              className="py-1 rounded-xl border border-zinc-200 bg-zinc-50 hover:bg-zinc-100 text-[10px] font-bold text-zinc-600 text-center"
+              title="Increase size by 50px"
+            >
+              +50px
             </button>
           </div>
         </div>
