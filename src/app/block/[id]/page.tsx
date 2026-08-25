@@ -98,7 +98,7 @@ export default async function BlockPage({ params }: { params: Promise<{ id: stri
           <div className="mt-6 bg-white border border-zinc-200 rounded-2xl p-4 text-sm leading-relaxed">
             <div className="font-bold">About this block</div>
             <p className="text-zinc-600 mt-1">
-              This {b.size}×{b.size} square occupies {b.size*b.size} pixel-units on the 1000×1000 PixelsBid canvas.
+              This {b.size}×{b.size} square occupies {b.size*b.size} pixel-units on the 1000×1000 PixelBids.lol canvas.
               It was rented for 30 days and is tracked for clicks and impressions — spatial ownership you can see and click.
             </p>
             <div className="mt-3 text-xs text-zinc-500">Block ID: {b.id} · Rented: {b.rentedAt ? new Date(b.rentedAt).toLocaleDateString() : "—"} · Expires: {b.expiresAt ? new Date(b.expiresAt).toLocaleDateString() : "—"} · Category: {(b as unknown as { category: string }).category || "—"}</div>

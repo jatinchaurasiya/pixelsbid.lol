@@ -66,7 +66,7 @@ export default function DashboardPage() {
         body: JSON.stringify({
           reservationId: b.id,
           title: b.title || "Lease Renewal",
-          targetUrl: b.targetUrl || "https://pixelsbid.lol",
+          targetUrl: b.targetUrl || "https://pixelbids.lol",
           imageUrl: b.imageUrl || undefined,
         }),
       });

@@ -168,7 +168,7 @@ export default function TodayPage() {
           </div>
 
           <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-zinc-950">
-            Today on <span className="text-[#ff3b30]">PixelsBid</span>
+            Today on <span className="text-[#ff3b30]">PixelBids.lol</span>
           </h1>
 
           <p className="mt-2 text-sm sm:text-base text-zinc-600 max-w-2xl leading-relaxed">
@@ -438,41 +438,6 @@ export default function TodayPage() {
             </div>
 
             <form onSubmit={handleOutbidSubmit} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700">
-                  Square Dimension
-                </label>
-                <div className="mt-1.5 grid grid-cols-4 gap-2">
-                  {[10, 20, 30, 50].map((s) => {
-                    const cost =
-                      Math.max(1, Math.round(Math.pow(s / 10, 2))) * 100;
-                    return (
-                      <button
-                        key={s}
-                        type="button"
-                        onClick={() =>
-                          setOutbidForm({ ...outbidForm, size: s })
-                        }
-                        className={`p-2 rounded-xl border text-center transition text-xs ${
-                          outbidForm.size === s
-                            ? "bg-zinc-950 text-white border-zinc-950 font-black shadow-xs ring-2 ring-red-500"
-                            : "bg-zinc-50 border-zinc-200 text-zinc-800 font-bold hover:bg-zinc-100"
-                        }`}
-                      >
-                        <div>{s}×{s}</div>
-                        <div
-                          className={`text-[10px] mt-0.5 ${
-                            outbidForm.size === s ? "text-amber-400" : "text-zinc-500"
-                          }`}
-                        >
-                          {formatCents(cost)}
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700">
                   Project or Brand Name
