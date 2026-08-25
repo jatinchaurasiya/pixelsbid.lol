@@ -84,9 +84,9 @@ export default function AuthPage() {
         {/* Header */}
         <div className="text-center mb-6">
           <Link href="/" className="inline-flex items-center gap-2 mb-3">
-            <img src="/logo.png" alt="PixelsBid" className="w-8 h-8 rounded-lg object-contain" />
+            <img src="/logo.png" alt="PixelBids" className="w-8 h-8 rounded-lg object-contain" />
             <span className="font-black text-xl tracking-tight">
-              pixelsbid<span className="text-[#ff3b30]">.lol</span>
+              pixelbids<span className="text-[#ff3b30]">.lol</span>
             </span>
           </Link>
           <h1 className="text-2xl sm:text-3xl font-black text-zinc-950 tracking-tight">

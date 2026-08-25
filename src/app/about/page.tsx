@@ -3,14 +3,14 @@ import Link from "next/link";
 export default function AboutPage() {
   return (
     <div className="mx-auto max-w-[800px] px-4 py-10">
-      <h1 className="text-3xl font-black tracking-tight">About PixelsBid.lol</h1>
+      <h1 className="text-3xl font-black tracking-tight">About PixelBids.lol</h1>
       <div className="mt-4 bg-white border border-zinc-200 rounded-3xl p-6 sm:p-8 text-sm leading-relaxed shadow-sm">
         <p className="text-base text-zinc-700 font-medium">
-          <b>PixelsBid.lol</b> is a live, interactive 1,000,000 pixel billboard combining the timeless spatial real estate of the Million Dollar Homepage with the high-stakes competitive bidding of the viral pay-to-rank movement.
+          <b>PixelBids.lol</b> is a live, interactive 1,000,000 pixel billboard combining the timeless spatial real estate of the Million Dollar Homepage with the high-stakes competitive bidding of the viral pay-to-rank movement.
         </p>
 
         <p className="mt-4 text-zinc-600">
-          Traditional directories hide your project behind opaque algorithms and hidden ranking scores. On PixelsBid, visibility is direct and transparent: you buy physical pixel real estate on the canvas, your square size determines your leaderboard dominance, and traffic flows straight to your website.
+          Traditional directories hide your project behind opaque algorithms and hidden ranking scores. On PixelBids, visibility is direct and transparent: you buy physical pixel real estate on the canvas, your square size determines your leaderboard dominance, and traffic flows straight to your website.
         </p>
 
         <div className="mt-6 grid grid-cols-3 gap-3 text-center">

@@ -2,7 +2,7 @@ export default function TermsPage(){
   return (
     <div className="mx-auto max-w-[800px] px-4 py-10 prose prose-zinc">
       <h1>Terms of Service</h1>
-      <p className="lead">Effective: August 24, 2026. Domain: pixelsbid.lol (operated as PixelsBid).</p>
+      <p className="lead">Effective: August 24, 2026. Domain: pixelbids.lol (operated as PixelBids).</p>
       <h2>1. Lease of pixel space</h2>
       <p>You rent a square block of pixel-units on a 1000×1000 canvas. Price = size² × $1 (unit price). Lease is 30 days from approval, non-exclusive, revocable for policy violations.</p>
       <h2>2. Payments</h2>

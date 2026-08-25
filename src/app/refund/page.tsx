@@ -8,7 +8,7 @@ export default function RefundPage(){
         <li><b>Duplicate/failed payments:</b> Idempotent webhooks prevent double charges; if a double charge occurs we refund within 5 business days.</li>
         <li><b>Takendown for policy violation:</b> No refund if removed for violating Rules/Acceptable Use after going live.</li>
       </ul>
-      <p>Contact: support@pixelsbid.lol with your block ID and payment ID.</p>
+      <p>Contact: support@pixelbids.lol with your block ID and payment ID.</p>
     </div>
   );
 }

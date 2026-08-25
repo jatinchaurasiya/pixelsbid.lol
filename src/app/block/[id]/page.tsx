@@ -10,7 +10,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const { id } = await params;
   const b = mockStore.blocks.find(x=>x.id===id);
   return {
-    title: b ? `${b.title || "Pixel Block"} — ${b.size}×${b.size} on PixelsBid.lol` : "Pixel Block — PixelsBid.lol",
+    title: b ? `${b.title || "Pixel Block"} — ${b.size}×${b.size} on PixelBids.lol` : "Pixel Block — PixelBids.lol",
     description: b ? `${b.title} — ${b.size}×${b.size} (${b.size*b.size} pixels) at ${b.x},${b.y}. ${b.clicks} clicks.` : "Pixel block",
   };
 }

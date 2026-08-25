@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 import { mockStore } from "@/lib/mock-store";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const base = process.env.NEXT_PUBLIC_APP_URL || "https://pixelsbid.lol";
+  const base = process.env.NEXT_PUBLIC_APP_URL || "https://pixelbids.lol";
   const staticPages = ["", "/today", "/leaderboard", "/stats", "/rules", "/about", "/terms", "/privacy", "/refund"].map(p => ({
     url: `${base}${p}`,
     lastModified: new Date(),

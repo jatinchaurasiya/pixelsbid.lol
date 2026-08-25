@@ -10,7 +10,7 @@ export default function PrivacyPage(){
         <li>Analytics is decoupled and anonymized; it can fail without affecting checkout.</li>
       </ul>
       <h2>Contact</h2>
-      <p>Email: privacy@pixelsbid.lol — we respond within 7 days. You can request deletion of your blocks and account.</p>
+      <p>Email: privacy@pixelbids.lol — we respond within 7 days. You can request deletion of your blocks and account.</p>
     </div>
   );
 }

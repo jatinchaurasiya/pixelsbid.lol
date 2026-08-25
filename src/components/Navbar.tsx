@@ -15,11 +15,11 @@ export default function Navbar() {
           <Link href="/" className="flex items-center gap-2.5 group">
             <img
               src="/logo.png"
-              alt="PixelsBid"
+              alt="PixelBids"
               className="w-8 h-8 rounded-lg object-contain group-hover:scale-105 transition shrink-0"
             />
             <span className="font-black tracking-tight text-[19px]">
-              pixelsbid<span className="text-[#ff3b30]">.lol</span>
+              pixelbids<span className="text-[#ff3b30]">.lol</span>
             </span>
           </Link>
           <nav className="hidden md:flex items-center gap-1 text-sm font-medium">

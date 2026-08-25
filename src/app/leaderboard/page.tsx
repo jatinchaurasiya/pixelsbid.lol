@@ -33,7 +33,7 @@ export default async function LeaderboardPage() {
             <h1 className="text-3xl sm:text-4xl font-black tracking-tight">Leaderboard & Top Titans</h1>
             <p className="text-sm text-zinc-600 mt-1 max-w-2xl leading-relaxed">
               Real 1,000,000 pixel billboard real estate. Your leaderboard rank is determined directly by your physical square dimensions on{" "}
-              <b>pixelsbid.lol</b>.
+              <b>pixelbids.lol</b>.
             </p>
           </div>
         </div>

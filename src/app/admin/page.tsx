@@ -202,7 +202,7 @@ export default function AdminPage() {
 
           <div className="mt-6 pt-4 border-t border-zinc-100">
             <Link href="/" className="text-xs text-zinc-500 hover:text-zinc-900 font-medium">
-              ← Return to PixelsBid Home
+              ← Return to PixelBids Home
             </Link>
           </div>
         </div>

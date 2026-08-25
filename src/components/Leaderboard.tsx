@@ -101,7 +101,7 @@ export default function Leaderboard({ rows }: { rows: LeaderRow[] }) {
 
           const hostname = r.targetUrl
             ? r.targetUrl.replace(/^https?:\/\//, "").replace(/\/.*$/, "")
-            : "pixelsbid.lol";
+            : "pixelbids.lol";
 
           const blocksCount = Math.round((r.size * r.size) / 100);
 

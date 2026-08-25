@@ -435,7 +435,7 @@ export default function HomePage() {
                   </span>
                 </div>
                 <p className="text-[11px] text-zinc-500 mt-0.5 line-clamp-2 leading-relaxed">
-                  {extractedMeta?.description || `Ready to claim your 30-day billboard spot on pixelsbid.lol`}
+                  {extractedMeta?.description || `Ready to claim your 30-day billboard spot on pixelbids.lol`}
                 </p>
               </div>
             </div>
