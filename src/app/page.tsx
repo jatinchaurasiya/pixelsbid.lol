@@ -263,8 +263,38 @@ export default function HomePage() {
     setReserving(true);
     try {
       const size = selection?.size || 20;
-      const x = selection?.x ?? Math.floor(Math.random() * (100 - size / 10)) * 10;
-      const y = selection?.y ?? Math.floor(Math.random() * (100 - size / 10)) * 10;
+      let x = selection?.x;
+      let y = selection?.y;
+
+      if (x === undefined || y === undefined) {
+        // Find first open non-overlapping slot on 10px grid
+        const allBlocks = (data?.blocks || []) as unknown as CanvasBlock[];
+        let foundSlot = false;
+        for (let testY = 0; testY <= 1000 - size; testY += 20) {
+          for (let testX = 0; testX <= 1000 - size; testX += 20) {
+            const hasOverlap = allBlocks.some((b) => {
+              if (b.status === "expired") return false;
+              return !(
+                testX + size <= b.x ||
+                b.x + b.size <= testX ||
+                testY + size <= b.y ||
+                b.y + b.size <= testY
+              );
+            });
+            if (!hasOverlap) {
+              x = testX;
+              y = testY;
+              foundSlot = true;
+              break;
+            }
+          }
+          if (foundSlot) break;
+        }
+        if (!foundSlot) {
+          x = 0;
+          y = 0;
+        }
+      }
 
       const r = await fetch("/api/reservations", {
         method: "POST",

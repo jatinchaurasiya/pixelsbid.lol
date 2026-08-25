@@ -26,7 +26,7 @@ export async function GET(req: Request) {
           reserved_at, reservation_expires_at, rented_at, expires_at
         FROM pixel_blocks
         WHERE owner_id = ${userId}
-        ORDER BY created_at DESC
+        ORDER BY COALESCE(rented_at, reserved_at) DESC
       `;
 
       return NextResponse.json({

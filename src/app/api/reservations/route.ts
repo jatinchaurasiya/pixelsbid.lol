@@ -99,15 +99,11 @@ export async function POST(req: Request) {
       await sql`
         UPDATE pixel_blocks
         SET status = 'expired'
-        WHERE status = 'reserved' AND reservation_expires_at < NOW()
+        WHERE status = 'reserved' AND (reservation_expires_at < NOW() OR reservation_expires_at IS NULL)
       `;
 
       const id = crypto.randomUUID();
       const validOwnerId = userId && userId !== "anon" ? userId : null;
-      const cleanTitle = title?.trim() || null;
-      const cleanTarget = targetUrl?.trim() || null;
-      const cleanImage = imageUrl?.trim() || null;
-      const cleanCat = category?.trim() || "AI";
 
       try {
         await sql`
@@ -143,17 +139,19 @@ export async function POST(req: Request) {
         msg.includes("pixel_blocks_no_overlap") ||
         msg.includes("exclusion") ||
         msg.includes("overlap") ||
-        msg.includes("conflicting key")
+        msg.includes("conflicting key") ||
+        msg.includes("23P01")
       ) {
         return NextResponse.json({
-          error: "Overlap detected — that space is already occupied or held by another buyer.",
+          error: "That square is already reserved or occupied. Please select an open square on the grid.",
         }, { status: 409 });
       }
-      return NextResponse.json({ error: "Failed to reserve pixel block" }, { status: 500 });
+      return NextResponse.json({ error: msg || "Failed to reserve pixel block" }, { status: 500 });
     }
   } catch (e) {
-    console.error("[reservations] Handler error:", e);
-    return NextResponse.json({ error: "Failed to process reservation" }, { status: 500 });
+    const errText = e instanceof Error ? e.message : String(e);
+    console.error("[reservations] Handler error:", errText);
+    return NextResponse.json({ error: errText || "Failed to process reservation" }, { status: 500 });
   }
 }
 
