@@ -68,7 +68,27 @@ class MockStore {
   orders: MockOrder[] = [];
   visitors = 1420;
   constructor() {
-    // Clean production state — blocks are added when users reserve and pay
+    this.blocks = [
+      {
+        id: "b54c2b00-b4df-4ac6-8e8b-437ae6e14bca",
+        x: 450,
+        y: 450,
+        size: 100,
+        ownerId: null,
+        status: "active",
+        imageUrl: "/authormity-logo.png",
+        targetUrl: "https://authormity.space",
+        title: "Authormity — LinkedIn Thought Leadership in 30 Min",
+        category: "Marketing",
+        clicks: 142,
+        impressions: 3820,
+        priceCents: 10000,
+        reservedAt: new Date().toISOString(),
+        reservationExpiresAt: null,
+        rentedAt: new Date().toISOString(),
+        expiresAt: new Date(Date.now() + 30 * 86400000).toISOString(),
+      },
+    ];
   }
 
   priceFor(size: number, config = defaultConfig) {
