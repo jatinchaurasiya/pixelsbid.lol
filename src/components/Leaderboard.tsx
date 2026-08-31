@@ -33,7 +33,7 @@ export default function Leaderboard({ rows }: { rows: LeaderRow[] }) {
   return (
     <div className="bg-white border border-zinc-200 rounded-3xl overflow-hidden shadow-sm flex flex-col">
       {/* Header */}
-      <div className="p-4 border-b border-zinc-100 flex flex-wrap items-center justify-between gap-3 bg-zinc-50/50">
+      <div className="p-3.5 sm:p-4 border-b border-zinc-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-zinc-50/50">
         <div>
           <h3 className="font-black text-base tracking-tight flex items-center gap-2">
             <span className="w-6 h-6 rounded-full bg-amber-400 text-zinc-900 grid place-items-center text-xs font-black shadow-sm">
@@ -47,14 +47,14 @@ export default function Leaderboard({ rows }: { rows: LeaderRow[] }) {
         </div>
 
         {/* Tab switch */}
-        <div className="flex bg-zinc-200/70 p-1 rounded-full text-xs font-bold">
+        <div className="flex bg-zinc-200/70 p-1 rounded-full text-xs font-bold self-start sm:self-auto">
           <button
             onClick={() => setTab("pixels")}
             className={`px-3 py-1 rounded-full transition ${
               tab === "pixels" ? "bg-white text-zinc-900 shadow-xs" : "text-zinc-600 hover:text-zinc-900"
             }`}
           >
-            📐 Pixel Area
+            📐 Area
           </button>
           <button
             onClick={() => setTab("clicks")}
@@ -62,22 +62,22 @@ export default function Leaderboard({ rows }: { rows: LeaderRow[] }) {
               tab === "clicks" ? "bg-white text-zinc-900 shadow-xs" : "text-zinc-600 hover:text-zinc-900"
             }`}
           >
-            ⚡ Outbid Velocity
+            ⚡ Velocity
           </button>
         </div>
       </div>
 
       {/* Outbid #1 Spotlight Banner */}
       {top1 && (
-        <div className="bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-red-500/10 border-b border-amber-200/60 px-4 py-3 flex items-center justify-between text-xs">
-          <div className="min-w-0 pr-2">
-            <span className="font-black text-amber-900">👑 Current #1:</span>{" "}
+        <div className="bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-red-500/10 border-b border-amber-200/60 p-3 sm:px-4 sm:py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs">
+          <div className="min-w-0">
+            <span className="font-black text-amber-900">👑 #1:</span>{" "}
             <span className="font-bold text-zinc-900 truncate">{top1.title || "Top Block"}</span>{" "}
-            <span className="text-zinc-600">({top1.size}×{top1.size} · {Math.round(top1.size * top1.size / 100)} blocks)</span>
+            <span className="text-zinc-600">({top1.size}×{top1.size} · {Math.round(top1.size * top1.size / 100)}b)</span>
           </div>
           <a
             href="#canvas-section"
-            className="shrink-0 bg-zinc-900 text-white font-black px-3 py-1.5 rounded-full hover:bg-black transition shadow-xs flex items-center gap-1.5 text-[11px]"
+            className="self-start sm:self-auto shrink-0 bg-zinc-900 text-white font-black px-3 py-1.5 rounded-full hover:bg-black transition shadow-xs flex items-center gap-1.5 text-[11px]"
           >
             <span>⚡ Outbid #1</span>
             <span className="bg-amber-400 text-zinc-950 px-1.5 py-0.2 rounded text-[10px]">
@@ -108,15 +108,15 @@ export default function Leaderboard({ rows }: { rows: LeaderRow[] }) {
           return (
             <div
               key={r.id}
-              className="flex items-center gap-3 px-4 py-3 hover:bg-zinc-50/80 transition group"
+              className="flex items-center gap-2.5 sm:gap-3 p-3 sm:px-4 sm:py-3 hover:bg-zinc-50/80 transition group"
             >
               {/* Rank */}
-              <span className={`w-6 h-6 shrink-0 grid place-items-center rounded-full text-xs font-black ${rankBadge}`}>
+              <span className={`w-5 h-5 sm:w-6 sm:h-6 shrink-0 grid place-items-center rounded-full text-[11px] sm:text-xs font-black ${rankBadge}`}>
                 {idx + 1}
               </span>
 
               {/* Logo / Thumbnail */}
-              <div className="w-9 h-9 shrink-0 rounded-xl overflow-hidden border border-zinc-200 bg-white p-1 flex items-center justify-center shadow-xs">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 shrink-0 rounded-xl overflow-hidden border border-zinc-200 bg-white p-1 flex items-center justify-center shadow-xs">
                 {r.imageUrl ? (
                   <img
                     src={r.imageUrl}
@@ -127,7 +127,7 @@ export default function Leaderboard({ rows }: { rows: LeaderRow[] }) {
                     }}
                   />
                 ) : (
-                  <span className="text-xs font-black text-zinc-700">
+                  <span className="text-[10px] sm:text-xs font-black text-zinc-700">
                     {(r.title || "PX").slice(0, 2).toUpperCase()}
                   </span>
                 )}
@@ -135,42 +135,35 @@ export default function Leaderboard({ rows }: { rows: LeaderRow[] }) {
 
               {/* Content */}
               <div className="min-w-0 flex-1">
-                <div className="text-sm font-bold truncate flex items-center gap-1.5">
+                <div className="text-xs sm:text-sm font-bold truncate flex items-center gap-1.5">
                   <Link href={`/block/${encodeURIComponent(r.id)}`} className="hover:underline truncate text-zinc-900">
                     {r.title || "Untitled Block"}
                   </Link>
-                  <span className="text-[10px] bg-zinc-900 text-white px-1.5 py-0.5 rounded font-mono shrink-0">
+                  <span className="text-[9px] sm:text-[10px] bg-zinc-900 text-white px-1.5 py-0.5 rounded font-mono shrink-0">
                     {r.size}×{r.size}
                   </span>
-                  {r.category && (
-                    <span className="text-[10px] bg-zinc-100 text-zinc-600 border border-zinc-200 px-1.5 py-0.2 rounded-full shrink-0">
-                      {r.category}
-                    </span>
-                  )}
                 </div>
-                <div className="text-xs text-zinc-500 truncate flex items-center gap-2 mt-0.5">
+                <div className="text-[11px] text-zinc-500 truncate flex items-center gap-1.5 mt-0.5">
                   <a
                     href={`/api/blocks/click?id=${encodeURIComponent(r.id)}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-zinc-600 hover:text-red-600 truncate underline decoration-zinc-300"
+                    className="text-zinc-600 hover:text-red-600 truncate underline decoration-zinc-300 max-w-[120px] sm:max-w-none"
                   >
                     {hostname}
                   </a>
                   <span>•</span>
                   <span>{r.clicks.toLocaleString()} clicks</span>
-                  <span>•</span>
-                  <span>📍 {r.x},{r.y}</span>
                 </div>
               </div>
 
               {/* Metrics / Action */}
               <div className="text-right shrink-0">
-                <div className="text-sm font-black text-zinc-900 font-mono">
+                <div className="text-xs sm:text-sm font-black text-zinc-900 font-mono">
                   {formatCents(r.priceCents)}
                 </div>
-                <div className="text-[11px] text-zinc-500">
-                  {blocksCount} block{blocksCount > 1 ? "s" : ""} ($1/100px)
+                <div className="text-[10px] sm:text-[11px] text-zinc-500">
+                  {blocksCount}b
                 </div>
               </div>
             </div>
@@ -186,7 +179,7 @@ export default function Leaderboard({ rows }: { rows: LeaderRow[] }) {
 
       {/* Footer */}
       <div className="px-4 py-3 bg-zinc-50 border-t border-zinc-100 text-xs text-zinc-600 flex items-center justify-between">
-        <span><b>Pricing:</b> $1.00 USD per 10×10 block unit.</span>
+        <span><b>Pricing:</b> $1.00 per 10×10 block.</span>
         <Link href="/leaderboard" className="font-bold text-zinc-900 hover:underline">
           Full Board →
         </Link>

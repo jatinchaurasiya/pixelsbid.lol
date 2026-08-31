@@ -131,33 +131,33 @@ export default function DashboardPage() {
   const filtered = filter === "all" ? userBlocks : userBlocks.filter((b) => b.status === filter);
 
   return (
-    <div className="mx-auto max-w-[1200px] px-4 py-8">
+    <div className="mx-auto max-w-[1200px] px-3 sm:px-4 py-6 sm:py-8">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-zinc-200 pb-6">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-zinc-200 pb-5 sm:pb-6">
         <div>
-          <div className="flex items-center gap-2.5">
-            <h1 className="text-3xl font-black tracking-tight text-zinc-950">
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-zinc-950">
               Advertiser Dashboard
             </h1>
-            <span className="text-[10px] font-bold bg-zinc-100 text-zinc-700 border border-zinc-200 px-2.5 py-0.5 rounded-full">
+            <span className="text-[10px] font-bold bg-zinc-100 text-zinc-700 border border-zinc-200 px-2 py-0.5 rounded-full truncate max-w-[140px] sm:max-w-none">
               {user.name || user.email}
             </span>
           </div>
-          <p className="text-sm text-zinc-600 mt-1">
+          <p className="text-xs sm:text-sm text-zinc-600 mt-1">
             Manage your active billboard squares, view live click metrics, and renew your 30-day spots.
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2">
           <Link
             href="/#canvas-section"
-            className="bg-[#ff3b30] hover:bg-[#e5352c] text-white rounded-full px-5 py-2.5 text-xs font-bold transition shadow-xs"
+            className="bg-[#ff3b30] hover:bg-[#e5352c] text-white rounded-full px-4 sm:px-5 py-2 sm:py-2.5 text-xs font-bold transition shadow-xs"
           >
-            + Claim New Square
+            + Claim Spot
           </Link>
           <button
             onClick={() => signOut()}
-            className="border border-zinc-200 bg-white hover:bg-zinc-50 rounded-full px-4 py-2.5 text-xs font-bold text-zinc-700 transition shadow-2xs"
+            className="border border-zinc-200 bg-white hover:bg-zinc-50 rounded-full px-3.5 sm:px-4 py-2 sm:py-2.5 text-xs font-bold text-zinc-700 transition shadow-2xs"
           >
             Sign Out
           </button>
@@ -165,30 +165,30 @@ export default function DashboardPage() {
       </div>
 
       {/* Metrics Row */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-6">
-        <div className="bg-white border border-zinc-200/90 rounded-2xl p-4 shadow-2xs">
-          <div className="text-xs font-bold uppercase tracking-wider text-zinc-500">Active Squares</div>
-          <div className="text-2xl sm:text-3xl font-black text-zinc-950 mt-1">{activeCount}</div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mt-5 sm:mt-6">
+        <div className="bg-white border border-zinc-200/90 rounded-2xl p-3.5 sm:p-4 shadow-2xs">
+          <div className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-zinc-500">Active Squares</div>
+          <div className="text-xl sm:text-3xl font-black text-zinc-950 mt-0.5 sm:mt-1">{activeCount}</div>
         </div>
 
-        <div className="bg-white border border-zinc-200/90 rounded-2xl p-4 shadow-2xs">
-          <div className="text-xs font-bold uppercase tracking-wider text-zinc-500">Total Clicks Tracked</div>
-          <div className="text-2xl sm:text-3xl font-black text-zinc-950 mt-1">{totalClicks.toLocaleString()}</div>
+        <div className="bg-white border border-zinc-200/90 rounded-2xl p-3.5 sm:p-4 shadow-2xs">
+          <div className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-zinc-500">Clicks Tracked</div>
+          <div className="text-xl sm:text-3xl font-black text-zinc-950 mt-0.5 sm:mt-1">{totalClicks.toLocaleString()}</div>
         </div>
 
-        <div className="col-span-2 sm:col-span-1 bg-white border border-zinc-200/90 rounded-2xl p-4 shadow-2xs">
-          <div className="text-xs font-bold uppercase tracking-wider text-zinc-500">Total Squares Claimed</div>
-          <div className="text-2xl sm:text-3xl font-black text-zinc-950 mt-1">{userBlocks.length}</div>
+        <div className="col-span-2 sm:col-span-1 bg-white border border-zinc-200/90 rounded-2xl p-3.5 sm:p-4 shadow-2xs">
+          <div className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-zinc-500">Total Claimed</div>
+          <div className="text-xl sm:text-3xl font-black text-zinc-950 mt-0.5 sm:mt-1">{userBlocks.length}</div>
         </div>
       </div>
 
       {/* Filter Tabs */}
-      <div className="mt-8 flex flex-wrap gap-2 text-xs">
+      <div className="mt-6 sm:mt-8 flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 no-scrollbar text-xs">
         {(["all", "active", "pending_review", "reserved", "expired"] as const).map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f)}
-            className={`px-4 py-1.5 rounded-full border capitalize font-bold transition ${
+            className={`px-3.5 sm:px-4 py-1.5 rounded-full border capitalize font-bold transition shrink-0 whitespace-nowrap ${
               filter === f
                 ? "bg-zinc-950 text-white border-zinc-950 shadow-2xs"
                 : "bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50"

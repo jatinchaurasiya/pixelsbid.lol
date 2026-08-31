@@ -38,9 +38,10 @@ export default function Navbar() {
         <div className="flex items-center gap-2">
           <Link
             href="/#canvas-section"
-            className="hidden sm:inline-flex bg-[#ff3b30] hover:bg-[#e5352c] text-white text-xs sm:text-sm font-bold px-3 sm:px-4 py-2 rounded-full shadow-xs transition"
+            className="inline-flex bg-[#ff3b30] hover:bg-[#e5352c] text-white text-xs sm:text-sm font-black px-3 sm:px-4 py-1.5 sm:py-2 rounded-full shadow-xs transition active:scale-95"
           >
-            Claim pixels
+            <span className="sm:hidden">+ Claim</span>
+            <span className="hidden sm:inline">Claim pixels</span>
           </Link>
           {!isPending && (
             user ? (
@@ -66,7 +67,7 @@ export default function Navbar() {
             ) : (
               <Link
                 href="/sign-in"
-                className="inline-flex border border-zinc-200 rounded-full px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-bold hover:bg-zinc-50 transition"
+                className="hidden sm:inline-flex border border-zinc-200 rounded-full px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-bold hover:bg-zinc-50 transition"
               >
                 Sign in
               </Link>
@@ -93,81 +94,84 @@ export default function Navbar() {
         </div>
       </div>
       {mobile && (
-        <div className="md:hidden border-t border-zinc-200 bg-white/95 backdrop-blur-xl px-4 py-4 flex flex-col gap-1 shadow-lg animate-in slide-in-from-top-2 duration-200">
+        <div className="md:hidden border-t border-zinc-200 bg-white/95 backdrop-blur-xl px-4 py-4 flex flex-col gap-1 shadow-xl animate-in slide-in-from-top-2 duration-200 max-h-[calc(100dvh-56px)] overflow-y-auto pb-safe">
           <Link
             href="/"
             onClick={() => setMobile(false)}
-            className="flex items-center justify-between py-2.5 px-3 rounded-xl hover:bg-zinc-100 text-sm font-bold text-zinc-900"
+            className="flex items-center justify-between py-3 px-3.5 rounded-xl hover:bg-zinc-100 text-sm font-bold text-zinc-900 active:bg-zinc-200"
           >
             <span>Canvas Billboard</span>
-            <span className="text-xs text-zinc-400">1000×1000</span>
+            <span className="text-xs text-zinc-400 font-mono">1000×1000</span>
           </Link>
           <Link
             href="/today"
             onClick={() => setMobile(false)}
-            className="flex items-center justify-between py-2.5 px-3 rounded-xl bg-red-50 text-red-600 font-bold text-sm"
+            className="flex items-center justify-between py-3 px-3.5 rounded-xl bg-red-50 text-red-600 font-bold text-sm"
           >
             <span>Today&apos;s Leaderboard 🔥</span>
-            <span className="text-xs bg-red-100 px-2 py-0.5 rounded-full">Live</span>
+            <span className="text-xs bg-red-100 px-2 py-0.5 rounded-full font-bold">Live</span>
           </Link>
           <Link
             href="/leaderboard"
             onClick={() => setMobile(false)}
-            className="py-2.5 px-3 rounded-xl hover:bg-zinc-100 text-sm font-bold text-zinc-900"
+            className="py-3 px-3.5 rounded-xl hover:bg-zinc-100 text-sm font-bold text-zinc-900 active:bg-zinc-200"
           >
             Top Titans
           </Link>
           <Link
             href="/dashboard"
             onClick={() => setMobile(false)}
-            className="py-2.5 px-3 rounded-xl hover:bg-zinc-100 text-sm font-bold text-zinc-900"
+            className="py-3 px-3.5 rounded-xl hover:bg-zinc-100 text-sm font-bold text-zinc-900 active:bg-zinc-200"
           >
             My Billboard Dashboard
           </Link>
-          <div className="grid grid-cols-3 gap-1 pt-1 text-center">
+          <div className="grid grid-cols-3 gap-1.5 pt-2 text-center">
             <Link
               href="/stats"
               onClick={() => setMobile(false)}
-              className="py-2 rounded-lg bg-zinc-50 hover:bg-zinc-100 text-xs font-semibold text-zinc-700"
+              className="py-2.5 rounded-xl bg-zinc-50 hover:bg-zinc-100 text-xs font-bold text-zinc-700 active:bg-zinc-200"
             >
               Stats
             </Link>
             <Link
               href="/rules"
               onClick={() => setMobile(false)}
-              className="py-2 rounded-lg bg-zinc-50 hover:bg-zinc-100 text-xs font-semibold text-zinc-700"
+              className="py-2.5 rounded-xl bg-zinc-50 hover:bg-zinc-100 text-xs font-bold text-zinc-700 active:bg-zinc-200"
             >
               Rules
             </Link>
             <Link
               href="/about"
               onClick={() => setMobile(false)}
-              className="py-2 rounded-lg bg-zinc-50 hover:bg-zinc-100 text-xs font-semibold text-zinc-700"
+              className="py-2.5 rounded-xl bg-zinc-50 hover:bg-zinc-100 text-xs font-bold text-zinc-700 active:bg-zinc-200"
             >
               About
             </Link>
           </div>
-          <div className="mt-3 pt-3 border-t border-zinc-100 flex flex-col gap-2">
+          <div className="mt-4 pt-3 border-t border-zinc-100 flex flex-col gap-2.5">
             <Link
               href="/#canvas-section"
               onClick={() => setMobile(false)}
-              className="w-full bg-[#ff3b30] hover:bg-[#e5352c] text-white py-3 rounded-2xl font-black text-sm text-center shadow-md"
+              className="w-full bg-[#ff3b30] hover:bg-[#e5352c] text-white py-3.5 rounded-2xl font-black text-sm text-center shadow-md active:scale-98 transition"
             >
               Claim Pixel Spot on Grid →
             </Link>
             {user ? (
-              <div className="flex items-center justify-between bg-zinc-50 p-2.5 rounded-2xl">
-                <div className="flex items-center gap-2 min-w-0">
+              <div className="flex items-center justify-between bg-zinc-50 p-3 rounded-2xl border border-zinc-100">
+                <div className="flex items-center gap-2.5 min-w-0">
                   <img
                     src={user.image || `https://i.pravatar.cc/100?u=${user.email}`}
                     alt=""
-                    className="w-7 h-7 rounded-full object-cover shrink-0"
+                    className="w-8 h-8 rounded-full object-cover shrink-0"
                   />
-                  <span className="text-xs font-bold truncate text-zinc-900">{user.name || user.email}</span>
+                  <div className="min-w-0">
+                    <div className="text-xs font-bold truncate text-zinc-900">{user.name || "User"}</div>
+                    <div className="text-[10px] text-zinc-500 truncate">{user.email}</div>
+                  </div>
                 </div>
                 <button
                   onClick={() => { signOut(); setMobile(false); }}
-                  className="text-xs font-bold text-red-600 hover:text-red-700 px-2 py-1"
+                  className="text-xs font-bold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition"
                 >
                   Sign Out
                 </button>
@@ -176,7 +180,7 @@ export default function Navbar() {
               <Link
                 href="/sign-in"
                 onClick={() => setMobile(false)}
-                className="w-full border border-zinc-200 bg-white hover:bg-zinc-50 py-2.5 rounded-2xl font-bold text-xs text-zinc-900 text-center"
+                className="w-full border border-zinc-200 bg-white hover:bg-zinc-50 py-3 rounded-2xl font-bold text-xs text-zinc-900 text-center transition"
               >
                 Sign In / Create Account
               </Link>
@@ -187,3 +191,4 @@ export default function Navbar() {
     </header>
   );
 }
+

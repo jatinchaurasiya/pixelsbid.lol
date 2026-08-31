@@ -26,19 +26,19 @@ export default async function LeaderboardPage() {
   const outbidCostCents = outbidBlocks * 100; // $1.00 per 10x10 block
 
   return (
-    <div className="mx-auto max-w-[1250px] px-4 py-8 grid lg:grid-cols-[1fr_380px] gap-8">
+    <div className="mx-auto max-w-[1250px] px-3 sm:px-4 py-6 sm:py-8 grid lg:grid-cols-[1fr_380px] gap-6 lg:gap-8">
       <div>
-        <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-3xl sm:text-4xl font-black tracking-tight">Leaderboard & Top Titans</h1>
-            <p className="text-sm text-zinc-600 mt-1 max-w-2xl leading-relaxed">
+            <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-zinc-950">Leaderboard & Top Titans</h1>
+            <p className="text-xs sm:text-sm text-zinc-600 mt-1 max-w-2xl leading-relaxed">
               Real 1,000,000 pixel billboard real estate. Your leaderboard rank is determined directly by your physical square dimensions on{" "}
               <b>pixelbids.lol</b>.
             </p>
           </div>
         </div>
 
-        <div className="mt-6">
+        <div className="mt-5 sm:mt-6">
           <Leaderboard rows={rows as unknown as Parameters<typeof Leaderboard>[0]["rows"]} />
         </div>
       </div>

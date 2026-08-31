@@ -13,17 +13,17 @@ export default function AboutPage() {
           Traditional directories hide your project behind opaque algorithms and hidden ranking scores. On PixelBids, visibility is direct and transparent: you buy physical pixel real estate on the canvas, your square size determines your leaderboard dominance, and traffic flows straight to your website.
         </p>
 
-        <div className="mt-6 grid grid-cols-3 gap-3 text-center">
+        <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3 text-center">
           <div className="border border-zinc-200 bg-zinc-50 rounded-2xl p-4">
-            <div className="text-2xl font-black text-zinc-900">1,000,000</div>
+            <div className="text-2xl font-black text-zinc-950">1,000,000</div>
             <div className="text-xs text-zinc-500 font-bold mt-0.5">Total Pixels</div>
           </div>
           <div className="border border-zinc-200 bg-zinc-50 rounded-2xl p-4">
-            <div className="text-2xl font-black text-zinc-900">$1.00</div>
+            <div className="text-2xl font-black text-zinc-950">$1.00</div>
             <div className="text-xs text-zinc-500 font-bold mt-0.5">Per 10×10 Block</div>
           </div>
           <div className="border border-zinc-200 bg-zinc-50 rounded-2xl p-4">
-            <div className="text-2xl font-black text-zinc-900">30 Days</div>
+            <div className="text-2xl font-black text-zinc-950">30 Days</div>
             <div className="text-xs text-zinc-500 font-bold mt-0.5">Active Lease</div>
           </div>
         </div>

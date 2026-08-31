@@ -320,33 +320,33 @@ export default function HomePage() {
   };
 
   return (
-    <div className="pb-28">
+    <div className="pb-28 pb-safe">
       <StatsBar />
 
       {/* Hero Section — Minimalist Outbid Style */}
-      <section className="mx-auto max-w-[1200px] px-4 pt-12 pb-10 text-center sm:pt-16 sm:pb-14">
-        <div className="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-4 py-1.5 text-xs font-bold text-zinc-700 shadow-2xs mb-5">
+      <section className="mx-auto max-w-[1200px] px-4 pt-8 pb-8 text-center sm:pt-16 sm:pb-14">
+        <div className="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-3.5 py-1.5 text-xs font-bold text-zinc-700 shadow-2xs mb-4">
           <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
           <span>1000×1000 Live Billboard</span>
           <span className="text-zinc-300">•</span>
-          <span className="text-zinc-950 font-mono">$1.00 per 10×10 block</span>
+          <span className="text-zinc-950 font-mono">$1.00/block</span>
         </div>
 
-        <h1 className="mx-auto max-w-4xl text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight text-zinc-950 leading-[1.05]">
+        <h1 className="mx-auto max-w-4xl text-3xl sm:text-6xl lg:text-7xl font-black tracking-tight text-zinc-950 leading-[1.1] sm:leading-[1.05]">
           Claim your pixels. <br />
           <span className="text-[#ff3b30]">Outbid the rest.</span>
         </h1>
 
-        <p className="mx-auto mt-4 max-w-2xl text-sm sm:text-base text-zinc-600 font-medium leading-relaxed">
+        <p className="mx-auto mt-3 sm:mt-4 max-w-2xl text-xs sm:text-base text-zinc-600 font-medium leading-relaxed px-2">
           The internet&apos;s real-time pay-to-rank billboard. Your position and size on the board reflect your bid.
         </p>
 
         {/* Viral Hero Input Bar with Auto Metadata Extractor */}
-        <div className="mt-8 mx-auto max-w-2xl">
+        <div className="mt-6 sm:mt-8 mx-auto max-w-2xl">
           <form onSubmit={handleHeroOutbid}>
-            <div className="flex flex-col sm:flex-row items-center gap-2 p-1.5 bg-white border border-zinc-200/90 rounded-2xl sm:rounded-full shadow-xs hover:border-zinc-300 focus-within:border-zinc-400 focus-within:ring-4 focus-within:ring-zinc-900/5 transition">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 p-1.5 bg-white border border-zinc-200/90 rounded-2xl sm:rounded-full shadow-xs hover:border-zinc-300 focus-within:border-zinc-400 focus-within:ring-4 focus-within:ring-zinc-900/5 transition">
               {/* URL Input */}
-              <div className="flex items-center gap-2.5 px-4 py-2.5 sm:py-2 flex-1 w-full">
+              <div className="flex items-center gap-2.5 px-3.5 py-2.5 sm:py-2 flex-1 w-full min-h-[44px]">
                 {isExtracting ? (
                   <span className="w-5 h-5 rounded-full border-2 border-zinc-300 border-t-zinc-900 animate-spin shrink-0" />
                 ) : activeLogo ? (
@@ -377,14 +377,14 @@ export default function HomePage() {
               </div>
 
               {/* Niche Category Dropdown */}
-              <div className="w-full sm:w-auto px-2 sm:px-0">
+              <div className="w-full sm:w-auto px-1 sm:px-0">
                 <select
                   value={heroCategory}
                   onChange={(e) => {
                     setHeroCategory(e.target.value);
                     setForm((f) => ({ ...f, category: e.target.value }));
                   }}
-                  className="w-full sm:w-auto border sm:border-0 border-zinc-200 bg-zinc-50 sm:bg-transparent rounded-full px-3.5 py-2 text-xs font-bold text-zinc-700 focus:outline-none cursor-pointer"
+                  className="w-full sm:w-auto border border-zinc-200 sm:border-0 bg-zinc-50 sm:bg-transparent rounded-xl sm:rounded-full px-3.5 py-2 text-xs font-bold text-zinc-700 focus:outline-none cursor-pointer min-h-[38px]"
                 >
                   {niches.map((n) => (
                     <option key={n.id} value={n.id}>
@@ -398,7 +398,7 @@ export default function HomePage() {
               <button
                 type="submit"
                 disabled={reserving}
-                className="w-full sm:w-auto rounded-full bg-[#f87171] hover:bg-[#ef4444] text-white px-7 py-2.5 font-bold text-sm transition shadow-2xs hover:scale-[1.02] active:scale-[0.98] shrink-0 disabled:opacity-50"
+                className="w-full sm:w-auto rounded-xl sm:rounded-full bg-[#f87171] hover:bg-[#ef4444] text-white px-7 py-3 sm:py-2.5 font-bold text-sm transition shadow-2xs hover:scale-[1.02] active:scale-[0.98] shrink-0 disabled:opacity-50 min-h-[44px]"
               >
                 {reserving ? "Reserving…" : "Outbid"}
               </button>
@@ -431,7 +431,7 @@ export default function HomePage() {
                     {activeTitle || instantMeta?.domain}
                   </span>
                   <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.2 rounded-full shrink-0">
-                    {extractedMeta ? "✓ Metadata Detected" : "● Live Preview"}
+                    {extractedMeta ? "✓ Metadata" : "● Preview"}
                   </span>
                 </div>
                 <p className="text-[11px] text-zinc-500 mt-0.5 line-clamp-2 leading-relaxed">
@@ -450,12 +450,12 @@ export default function HomePage() {
       {/* Main Canvas & Interactive Grid Section */}
       <section
         id="canvas-section"
-        className="mx-auto max-w-[1400px] px-4 grid lg:grid-cols-[1fr_380px] gap-8"
+        className="mx-auto max-w-[1400px] px-3 sm:px-4 grid lg:grid-cols-[1fr_380px] gap-6 lg:gap-8"
       >
         <div className="min-w-0">
           {/* Canvas Component with 10x10 Snapping and Live In-Canvas Logo Preview */}
           {!data ? (
-            <div className="aspect-square sm:aspect-[1.12] bg-white border border-zinc-200 rounded-3xl grid place-items-center text-zinc-400 font-bold">
+            <div className="aspect-square sm:aspect-[1.12] bg-white border border-zinc-200 rounded-3xl grid place-items-center text-zinc-400 font-bold text-sm p-4 text-center">
               Loading 1000×1000 Canvas Grid…
             </div>
           ) : (
@@ -471,16 +471,16 @@ export default function HomePage() {
 
           {/* Selection Status Summary */}
           {selection && (
-            <div className="mt-4 bg-zinc-900 text-white rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3 shadow-md border border-zinc-800">
+            <div className="mt-3 sm:mt-4 bg-zinc-900 text-white rounded-2xl p-3.5 sm:p-4 flex flex-wrap items-center justify-between gap-3 shadow-md border border-zinc-800">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-zinc-800 border border-zinc-700 grid place-items-center font-mono font-black text-amber-400 text-sm shrink-0">
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-zinc-800 border border-zinc-700 grid place-items-center font-mono font-black text-amber-400 text-xs sm:text-sm shrink-0">
                   {selectedUnits}b
                 </div>
                 <div>
-                  <div className="text-xs text-zinc-400 font-medium">
-                    Grid Location: ({selection.x}, {selection.y}) · {selection.size}×{selection.size} px
+                  <div className="text-[11px] sm:text-xs text-zinc-400 font-medium">
+                    Grid: ({selection.x}, {selection.y}) · {selection.size}×{selection.size} px
                   </div>
-                  <div className="text-sm font-black text-white">
+                  <div className="text-xs sm:text-sm font-black text-white">
                     {selectedUnits} block{selectedUnits > 1 ? "s" : ""} ={" "}
                     <span className="text-amber-400 font-mono">
                       {formatCents(selection.priceCents)}
@@ -489,8 +489,8 @@ export default function HomePage() {
                 </div>
               </div>
 
-              <div className="text-xs text-zinc-400 font-medium">
-                ⚡ 30-Day Lease · 10-Minute Lock Hold
+              <div className="text-[11px] sm:text-xs text-zinc-400 font-medium">
+                ⚡ 30-Day Lease · 10-Min Hold
               </div>
             </div>
           )}
@@ -499,14 +499,14 @@ export default function HomePage() {
         {/* Sidebar: Quick Action & Leaderboard */}
         <div className="space-y-6">
           {/* Quick Claim Card */}
-          <div className="bg-white border border-zinc-200/90 rounded-3xl p-6 shadow-xs">
+          <div className="bg-white border border-zinc-200/90 rounded-3xl p-5 sm:p-6 shadow-xs">
             <div className="flex items-center justify-between border-b border-zinc-100 pb-3 mb-4">
               <div>
                 <h3 className="font-black text-base text-zinc-950">
                   Selected Square
                 </h3>
                 <p className="text-xs text-zinc-500">
-                  Click any cell on the grid to reposition
+                  Tap any cell on the grid to reposition
                 </p>
               </div>
               <span className="text-xs bg-zinc-950 text-white font-mono font-black px-3 py-1 rounded-full">
@@ -541,7 +541,7 @@ export default function HomePage() {
                         value={form.title}
                         onChange={(e) => setForm({ ...form, title: e.target.value })}
                         placeholder="e.g. Acme Studio"
-                        className="w-full border border-zinc-200 rounded-lg px-3 py-1.5 text-xs bg-white focus:outline-none"
+                        className="w-full border border-zinc-200 rounded-lg px-3 py-2 text-xs bg-white focus:outline-none"
                       />
                     </div>
 
@@ -568,7 +568,7 @@ export default function HomePage() {
                           </button>
                         </div>
                       ) : (
-                        <label className="flex items-center justify-center gap-2 border border-dashed border-zinc-300 hover:border-zinc-400 bg-white rounded-xl p-2.5 cursor-pointer text-xs font-bold text-zinc-700">
+                        <label className="flex items-center justify-center gap-2 border border-dashed border-zinc-300 hover:border-zinc-400 bg-white rounded-xl p-2.5 cursor-pointer text-xs font-bold text-zinc-700 min-h-[44px]">
                           <span>📁 Choose Image File (&lt;2MB)</span>
                           <input
                             type="file"
@@ -587,7 +587,7 @@ export default function HomePage() {
               <button
                 onClick={confirmReserve}
                 disabled={reserving || !selection}
-                className="w-full bg-[#ff3b30] hover:bg-[#e5352c] text-white rounded-2xl py-3.5 font-black text-base transition shadow-md hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full bg-[#ff3b30] hover:bg-[#e5352c] text-white rounded-2xl py-3.5 font-black text-base transition shadow-md hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 flex items-center justify-center gap-2 min-h-[48px]"
               >
                 {reserving ? (
                   "Locking Spot…"
@@ -608,9 +608,35 @@ export default function HomePage() {
           <Leaderboard rows={leaderboardRows} />
         </div>
       </section>
+
+      {/* Mobile Sticky Claim Drawer */}
+      {selection && (
+        <div className="sm:hidden fixed bottom-3 left-3 right-3 z-40 bg-zinc-950/95 backdrop-blur-lg text-white border border-zinc-800 rounded-2xl p-3 flex items-center justify-between gap-3 shadow-2xl animate-in slide-in-from-bottom-2 duration-200">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+              <span className="text-xs font-black text-white truncate">
+                {selection.size}×{selection.size} px ({selectedUnits}b)
+              </span>
+            </div>
+            <div className="text-[11px] text-zinc-400 font-mono truncate">
+              📍 ({selection.x}, {selection.y}) · <span className="text-amber-400 font-bold">{formatCents(selection.priceCents)}</span>
+            </div>
+          </div>
+
+          <button
+            onClick={confirmReserve}
+            disabled={reserving}
+            className="bg-[#ff3b30] hover:bg-[#e5352c] text-white text-xs font-black px-4 py-2.5 rounded-xl shadow-md shrink-0 flex items-center gap-1.5 active:scale-95 transition"
+          >
+            {reserving ? "Locking…" : "Claim Spot →"}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
+
 
 
 

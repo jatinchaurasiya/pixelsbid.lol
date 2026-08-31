@@ -160,29 +160,29 @@ export default function TodayPage() {
   return (
     <div className="mx-auto max-w-[1300px] px-4 py-8">
       {/* Top Banner — 24H Round Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 bg-white border border-zinc-200 rounded-3xl p-6 sm:p-8 shadow-xs">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-5 bg-white border border-zinc-200 rounded-3xl p-5 sm:p-8 shadow-xs">
         <div>
           <div className="inline-flex items-center gap-2 rounded-full border border-amber-300 bg-amber-50 px-3.5 py-1 text-xs font-bold text-amber-900 mb-3 shadow-2xs">
             <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
             <span>Today&apos;s 24-Hour Bidding Round</span>
           </div>
 
-          <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-zinc-950">
+          <h1 className="text-2xl sm:text-5xl font-black tracking-tight text-zinc-950">
             Today on <span className="text-[#ff3b30]">PixelBids.lol</span>
           </h1>
 
-          <p className="mt-2 text-sm sm:text-base text-zinc-600 max-w-2xl leading-relaxed">
+          <p className="mt-2 text-xs sm:text-base text-zinc-600 max-w-2xl leading-relaxed">
             The live pay-to-rank billboard for today. Outbid the current #1 to take the top spotlight and capture live clicks. $1.00 per 10×10 block unit.
           </p>
         </div>
 
         {/* Live Countdown Clock */}
-        <div className="flex flex-col items-start md:items-end gap-2 bg-zinc-950 text-white rounded-2xl p-4 sm:p-5 shrink-0 shadow-md border border-zinc-800">
-          <div className="text-[11px] uppercase tracking-widest text-zinc-400 font-bold flex items-center gap-1.5">
+        <div className="flex flex-col items-start md:items-end gap-1.5 bg-zinc-950 text-white rounded-2xl p-4 sm:p-5 shrink-0 shadow-md border border-zinc-800 self-stretch sm:self-auto">
+          <div className="text-[10px] sm:text-[11px] uppercase tracking-widest text-zinc-400 font-bold flex items-center gap-1.5">
             <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
             Round Resets In
           </div>
-          <div className="font-mono text-2xl sm:text-3xl font-black text-amber-400">
+          <div className="font-mono text-xl sm:text-3xl font-black text-amber-400">
             {countdown || "Calculating…"}
           </div>
           <div className="text-[10px] text-zinc-400">Resets daily at 00:00 UTC</div>
@@ -190,13 +190,13 @@ export default function TodayPage() {
       </div>
 
       {/* Hero Spotlight: Today's #1 Leader */}
-      <div className="mt-8 bg-gradient-to-br from-zinc-900 via-zinc-950 to-black text-white rounded-3xl p-6 sm:p-8 shadow-xl border border-zinc-800 relative overflow-hidden">
+      <div className="mt-6 sm:mt-8 bg-gradient-to-br from-zinc-900 via-zinc-950 to-black text-white rounded-3xl p-5 sm:p-8 shadow-xl border border-zinc-800 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-96 h-96 bg-red-500/10 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div className="flex items-start sm:items-center gap-5">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-zinc-800 border-2 border-amber-400/80 p-2 flex items-center justify-center shrink-0 shadow-lg relative">
-              <span className="absolute -top-2.5 -right-2.5 bg-amber-400 text-zinc-950 font-black text-xs px-2 py-0.5 rounded-full shadow">
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-5 sm:gap-6">
+          <div className="flex items-start sm:items-center gap-3.5 sm:gap-5">
+            <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-2xl bg-zinc-800 border-2 border-amber-400/80 p-2 flex items-center justify-center shrink-0 shadow-lg relative">
+              <span className="absolute -top-2 -right-2 bg-amber-400 text-zinc-950 font-black text-[10px] sm:text-xs px-2 py-0.5 rounded-full shadow">
                 #1
               </span>
               {topLeader?.imageUrl ? (
@@ -206,68 +206,68 @@ export default function TodayPage() {
                   className="w-full h-full object-contain"
                 />
               ) : (
-                <span className="text-2xl font-black text-amber-400">👑</span>
+                <span className="text-xl sm:text-2xl font-black text-amber-400">👑</span>
               )}
             </div>
 
-            <div>
-              <div className="text-xs uppercase tracking-widest text-amber-400 font-bold flex items-center gap-1.5">
+            <div className="min-w-0">
+              <div className="text-[10px] sm:text-xs uppercase tracking-widest text-amber-400 font-bold flex items-center gap-1.5">
                 <span>★</span> Today&apos;s King of the Board
               </div>
-              <h2 className="text-2xl sm:text-3xl font-black text-white mt-1">
-                {topLeader?.title || "Spot Open — Claim #1 Now"}
+              <h2 className="text-lg sm:text-3xl font-black text-white mt-1 truncate">
+                {topLeader?.title || "Spot Open — Claim #1"}
               </h2>
-              <div className="mt-1.5 flex flex-wrap items-center gap-3 text-xs text-zinc-400">
+              <div className="mt-1 flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-zinc-400">
                 {topLeader?.targetUrl && (
                   <a
                     href={`/api/blocks/click?id=${encodeURIComponent(topLeader.id)}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-amber-300 hover:underline font-mono truncate max-w-[200px]"
+                    className="text-amber-300 hover:underline font-mono truncate max-w-[140px] sm:max-w-[200px]"
                   >
                     {topLeader.targetUrl.replace(/^https?:\/\//, "")}
                   </a>
                 )}
                 <span>•</span>
                 <span>
-                  {topLeader ? `${topLeader.size}×${topLeader.size} (${Math.round((topLeader.size * topLeader.size) / 100)} blocks)` : "0 blocks"}
+                  {topLeader ? `${topLeader.size}×${topLeader.size} (${Math.round((topLeader.size * topLeader.size) / 100)}b)` : "0b"}
                 </span>
                 <span>•</span>
                 <span className="font-mono text-zinc-300">
-                  {topLeader ? formatCents(topLeader.priceCents) : "$0.00"} paid
+                  {topLeader ? formatCents(topLeader.priceCents) : "$0.00"}
                 </span>
               </div>
             </div>
           </div>
 
           {/* Outbid Action */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 pt-2 sm:pt-0">
             <button
               onClick={() => handleStartOutbid(minOutbidSize)}
-              className="bg-[#ff3b30] hover:bg-[#e5352c] text-white px-7 py-3.5 rounded-full font-black text-sm transition shadow-lg hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
+              className="bg-[#ff3b30] hover:bg-[#e5352c] text-white px-5 sm:px-7 py-3 sm:py-3.5 rounded-full font-black text-xs sm:text-sm transition shadow-lg hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
             >
               <span>⚡ Outbid #1 for {formatCents(minOutbidCostCents)}</span>
-              <span className="bg-white/20 px-2 py-0.5 rounded-full text-xs font-mono">
+              <span className="bg-white/20 px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-mono">
                 {minOutbidSize}×{minOutbidSize}
               </span>
             </button>
             <Link
               href="/#canvas-section"
-              className="border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 text-white px-6 py-3.5 rounded-full font-bold text-sm text-center transition"
+              className="border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 text-white px-5 py-3 sm:py-3.5 rounded-full font-bold text-xs sm:text-sm text-center transition"
             >
-              View on Canvas
+              View Canvas
             </Link>
           </div>
         </div>
       </div>
 
       {/* Category Tabs */}
-      <div className="mt-8 flex items-center gap-2 overflow-x-auto pb-2">
+      <div className="mt-6 sm:mt-8 flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar">
         {categories.map((cat) => (
           <button
             key={cat.id}
             onClick={() => setSelectedCategory(cat.id)}
-            className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition border ${
+            className={`px-3.5 sm:px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition border shrink-0 ${
               selectedCategory === cat.id
                 ? "bg-zinc-950 text-white border-zinc-950 shadow-xs"
                 : "bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-50"
@@ -418,11 +418,11 @@ export default function TodayPage() {
 
       {/* Instant Outbid Modal */}
       {showOutbidModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-zinc-200">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-150">
+          <div className="bg-white rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-zinc-200 max-h-[90dvh] overflow-y-auto pb-safe">
             <div className="flex items-center justify-between border-b border-zinc-100 pb-3 mb-4">
               <div>
-                <h3 className="font-black text-lg text-zinc-950">
+                <h3 className="font-black text-base sm:text-lg text-zinc-950">
                   ⚡ Outbid Today&apos;s Board
                 </h3>
                 <p className="text-xs text-zinc-500">

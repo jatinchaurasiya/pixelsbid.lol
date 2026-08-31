@@ -130,23 +130,23 @@ export default function RentPage() {
   const b = block as unknown as { x: number; y: number; size: number; priceCents: number; reservationExpiresAt: string; status: string } | null;
 
   return (
-    <div className="mx-auto max-w-[950px] px-4 py-8 grid md:grid-cols-[1fr_360px] gap-8">
-      <div className="bg-white border border-zinc-200 rounded-3xl p-6 sm:p-8 shadow-sm">
+    <div className="mx-auto max-w-[950px] px-3 sm:px-4 py-6 sm:py-8 grid md:grid-cols-[1fr_360px] gap-6 sm:gap-8">
+      <div className="bg-white border border-zinc-200 rounded-3xl p-5 sm:p-8 shadow-sm">
         <div className="flex items-center justify-between gap-2">
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight">Complete Your Rental</h1>
+          <h1 className="text-xl sm:text-3xl font-black tracking-tight text-zinc-950">Complete Your Rental</h1>
           {timeLeft && (
-            <span className={`text-xs font-mono font-bold px-3 py-1.5 rounded-full border ${isExpired ? "bg-red-50 text-red-700 border-red-200" : "bg-amber-50 text-amber-800 border-amber-200"}`}>
-              ⏱ Hold: {timeLeft}
+            <span className={`text-xs font-mono font-bold px-2.5 py-1 rounded-full border ${isExpired ? "bg-red-50 text-red-700 border-red-200" : "bg-amber-50 text-amber-800 border-amber-200"}`}>
+              ⏱ {timeLeft}
             </span>
           )}
         </div>
 
         {b ? (
-          <div className="mt-3 text-sm text-zinc-600 bg-zinc-50 border border-zinc-200 rounded-2xl p-3.5 flex flex-wrap items-center justify-between gap-2">
+          <div className="mt-3 text-xs sm:text-sm text-zinc-600 bg-zinc-50 border border-zinc-200 rounded-2xl p-3 sm:p-3.5 flex flex-wrap items-center justify-between gap-2">
             <div>
               Position: <b className="font-mono text-zinc-900">{b.x}, {b.y}</b> · Size: <b className="font-mono text-zinc-900">{b.size}×{b.size}</b> ({b.size * b.size} px)
             </div>
-            <div className="text-sm font-bold text-zinc-900">
+            <div className="text-xs sm:text-sm font-bold text-zinc-900">
               Total: <span className="text-[#ff3b30]">{formatCents(b.priceCents)}</span> (30 days)
             </div>
           </div>
@@ -176,7 +176,7 @@ export default function RentPage() {
                 value={form.title}
                 onChange={e => setForm({ ...form, title: e.target.value })}
                 placeholder="e.g. Acme AI — Ship Software 10x Faster"
-                className="mt-1 w-full border border-zinc-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-zinc-900 focus:outline-none bg-white"
+                className="mt-1 w-full border border-zinc-200 rounded-xl px-3.5 py-2.5 sm:py-3 text-sm focus:ring-2 focus:ring-zinc-900 focus:outline-none bg-white"
               />
             </div>
 
@@ -186,7 +186,7 @@ export default function RentPage() {
                 value={form.targetUrl}
                 onChange={e => setForm({ ...form, targetUrl: e.target.value })}
                 placeholder="https://yourproduct.com"
-                className="mt-1 w-full border border-zinc-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-zinc-900 focus:outline-none bg-white"
+                className="mt-1 w-full border border-zinc-200 rounded-xl px-3.5 py-2.5 sm:py-3 text-sm focus:ring-2 focus:ring-zinc-900 focus:outline-none bg-white"
               />
             </div>
 
@@ -270,13 +270,13 @@ export default function RentPage() {
               )}
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
               <div>
                 <label className="text-xs font-bold uppercase tracking-wider text-zinc-600">Category</label>
                 <select
                   value={form.category}
                   onChange={e => setForm({ ...form, category: e.target.value })}
-                  className="mt-1 w-full border border-zinc-200 rounded-xl px-4 py-3 text-sm bg-white focus:ring-2 focus:ring-zinc-900 focus:outline-none"
+                  className="mt-1 w-full border border-zinc-200 rounded-xl px-3.5 py-2.5 sm:py-3 text-sm bg-white focus:ring-2 focus:ring-zinc-900 focus:outline-none"
                 >
                   <option value="AI">AI & Machine Learning</option>
                   <option value="SaaS">SaaS & Software</option>
@@ -300,29 +300,30 @@ export default function RentPage() {
                   onChange={e => setForm({ ...form, email: e.target.value })}
                   placeholder="you@company.com"
                   type="email"
-                  className="mt-1 w-full border border-zinc-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-zinc-900 focus:outline-none bg-white"
+                  className="mt-1 w-full border border-zinc-200 rounded-xl px-3.5 py-2.5 sm:py-3 text-sm focus:ring-2 focus:ring-zinc-900 focus:outline-none bg-white"
                 />
               </div>
             </div>
 
-            <div className="rounded-2xl bg-amber-50 border border-amber-200 p-3.5 text-xs text-amber-900 leading-relaxed">
+            <div className="rounded-2xl bg-amber-50 border border-amber-200 p-3 sm:p-3.5 text-xs text-amber-900 leading-relaxed">
               <b>Content Policy:</b> No explicit, malicious, or deceptive content. Ads go live immediately upon payment and are verified by our moderation queue.
             </div>
 
             <button
               onClick={checkout}
               disabled={loading || !b || isExpired}
-              className="w-full bg-[#ff3b30] text-white rounded-full py-4 font-black text-lg hover:bg-[#e5352c] transition shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-[#ff3b30] text-white rounded-full py-3.5 sm:py-4 font-black text-base sm:text-lg hover:bg-[#e5352c] transition shadow-md disabled:opacity-50 disabled:cursor-not-allowed min-h-[48px]"
             >
               {loading ? "Redirecting to Secure Checkout…" : `Pay ${b ? formatCents(b.priceCents) : ""} — Secure Checkout →`}
             </button>
 
-            <div className="text-xs text-center text-zinc-500">
+            <div className="text-[11px] sm:text-xs text-center text-zinc-500">
               Instant 30-day placement upon payment. Receipts and invoicing handled securely.
             </div>
           </div>
         )}
       </div>
+
 
       <div className="space-y-4">
         <div className="bg-zinc-900 text-white rounded-3xl p-6 shadow-sm">
