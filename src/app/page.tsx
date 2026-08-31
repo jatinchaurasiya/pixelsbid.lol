@@ -34,6 +34,7 @@ export default function HomePage() {
     email: "",
   });
   const [reserving, setReserving] = useState(false);
+  const [reservationError, setReservationError] = useState<string | null>(null);
   const [filter, setFilter] = useState<string>("all");
 
   const load = async () => {
@@ -54,6 +55,7 @@ export default function HomePage() {
 
   const handleSelect = (sel: SelectionState | null) => {
     setSelection(sel);
+    if (reservationError) setReservationError(null);
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -75,6 +77,7 @@ export default function HomePage() {
   const confirmReserve = async () => {
     if (!selection) return;
     setReserving(true);
+    setReservationError(null);
     try {
       const r = await fetch("/api/reservations", {
         method: "POST",
@@ -94,7 +97,8 @@ export default function HomePage() {
       if (!r.ok) throw new Error(j.error || "Reservation failed");
       window.location.href = `/rent/${encodeURIComponent(j.id)}`;
     } catch (e: unknown) {
-      alert(e instanceof Error ? e.message : "Failed to reserve square");
+      const err = e instanceof Error ? e.message : "Failed to reserve square";
+      setReservationError(err);
     } finally {
       setReserving(false);
     }
@@ -314,7 +318,11 @@ export default function HomePage() {
       if (!r.ok) throw new Error(j.error || "Reservation failed");
       window.location.href = `/rent/${encodeURIComponent(j.id)}`;
     } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : "Failed to claim square");
+      const msg = err instanceof Error ? err.message : "Failed to claim square";
+      setReservationError(msg);
+      const canvasSection = document.getElementById("canvas-section");
+      if (canvasSection) canvasSection.scrollIntoView({ behavior: "smooth" });
+    } finally {
       setReserving(false);
     }
   };
@@ -582,6 +590,20 @@ export default function HomePage() {
                   </div>
                 )}
               </div>
+
+              {reservationError && (
+                <div className="bg-red-50 border border-red-200 text-red-800 text-xs rounded-xl p-3 flex items-start gap-2 animate-in fade-in duration-150">
+                  <span className="font-bold shrink-0">⚠️</span>
+                  <div className="flex-1 font-medium leading-relaxed">{reservationError}</div>
+                  <button
+                    type="button"
+                    onClick={() => setReservationError(null)}
+                    className="text-red-500 hover:text-red-700 font-bold ml-1 text-xs shrink-0"
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
 
               {/* 1-Click Outbid Button */}
               <button
